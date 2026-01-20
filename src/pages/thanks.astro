@@ -1,0 +1,109 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import site from "../content/site.json";
+
+const canonical = `${site.meta}/thanks`;
+const title = "Request Received | RLC Professional";
+const description = "Thanks for requesting a quote. You’ll be redirected to WhatsApp to confirm details.";
+const ogImage = site.assets?.ogImage ?? "/assets/og.jpg";
+---
+
+<BaseLayout lang="en" title={title} description={description} canonical={canonical} ogImage={ogImage}>
+  <main class="mx-auto max-w-3xl px-4 py-14">
+    <div class="card">
+      <h1 id="heading" class="text-2xl font-extrabold text-brand-900">Request received ✅</h1>
+
+      <p id="subtext" class="mt-2 text-slate-700">
+        We got your request. You’ll be redirected to WhatsApp to confirm details.
+      </p>
+
+      <div class="mt-6 rounded-2xl bg-brand-50 p-4 ring-1 ring-slate-200/60">
+        <p class="text-sm font-semibold text-brand-900">Service:</p>
+        <p id="serviceLabel" class="mt-1 text-sm text-slate-700">Loading…</p>
+      </div>
+
+      <p id="fallbackText" class="mt-6 text-sm text-slate-600">
+        If you’re not redirected automatically, tap below:
+      </p>
+
+      <div class="mt-3 flex flex-col gap-3 sm:flex-row">
+        <a id="waFallback" class="btn btn-accent w-full sm:w-auto" href="#" target="_blank" rel="noopener">
+          Open WhatsApp
+        </a>
+
+        <a id="backHome" class="btn btn-outline w-full sm:w-auto" href="/">
+          Back to Home
+        </a>
+      </div>
+
+      <p class="mt-6 text-xs text-slate-500">
+        If WhatsApp doesn’t open, you can also call us:
+        <a class="underline" href={`tel:${site.phoneTel}`}>{site.phoneDisplay}</a>
+      </p>
+    </div>
+  </main>
+
+  <script is:inline>
+    // --- Config ---
+    const whatsappNumber = "18632585424";
+
+    // --- Read query params ---
+    const params = new URLSearchParams(window.location.search);
+    const lang = (params.get("lang") || "en").toLowerCase();
+    const rawService = params.get("service") || "";
+    const service = rawService.trim() || (lang === "es" ? "un servicio" : "a service");
+
+    // --- UI Copy ---
+    const copy = {
+      en: {
+        heading: "Request received ✅",
+        subtext: "We got your request. You’ll be redirected to WhatsApp to confirm details.",
+        fallback: "If you’re not redirected automatically, tap below:",
+        wa: "Open WhatsApp",
+        back: "Back to Home",
+        homeHref: "/",
+        msg: "Hi Roman, I just requested a quote on your website for " + service + "."
+      },
+      es: {
+        heading: "Solicitud recibida ✅",
+        subtext: "Recibimos su solicitud. Será redirigido a WhatsApp para confirmar detalles.",
+        fallback: "Si no se abre automáticamente, toque aquí:",
+        wa: "Abrir WhatsApp",
+        back: "Volver al inicio",
+        homeHref: "/es/",
+        msg: "Hola Roman, acabo de solicitar un presupuesto en tu web para " + service + "."
+      }
+    };
+
+    const t = copy[lang] || copy.en;
+
+    // --- DOM refs ---
+    const heading = document.getElementById("heading");
+    const subtext = document.getElementById("subtext");
+    const fallbackText = document.getElementById("fallbackText");
+    const waFallback = document.getElementById("waFallback");
+    const backHome = document.getElementById("backHome");
+    const serviceLabel = document.getElementById("serviceLabel");
+
+    // --- Update UI ---
+    if (heading) heading.textContent = t.heading;
+    if (subtext) subtext.textContent = t.subtext;
+    if (fallbackText) fallbackText.textContent = t.fallback;
+    if (waFallback) waFallback.textContent = t.wa;
+    if (backHome) {
+      backHome.textContent = t.back;
+      backHome.setAttribute("href", t.homeHref);
+    }
+    if (serviceLabel) serviceLabel.textContent = service;
+
+    // --- Build WhatsApp URL (reliable) ---
+    const waUrl = "https://wa.me/" + whatsappNumber + "?text=" + encodeURIComponent(t.msg);
+
+    if (waFallback) waFallback.setAttribute("href", waUrl);
+
+    // --- Auto redirect ---
+    setTimeout(() => {
+      window.location.href = waUrl;
+    }, 650);
+  </script>
+</BaseLayout>

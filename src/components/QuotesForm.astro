@@ -1,0 +1,74 @@
+---
+const { t, formUrl } = Astro.props as { t: any; formUrl: string };
+
+// ✅ Detect language from URL (do not rely on props being passed consistently)
+const path = Astro.url?.pathname ?? "/";
+const isEs = path === "/es" || path.startsWith("/es/");
+const lang = (isEs ? "es" : "en") as "en" | "es";
+
+// ✅ Build absolute base origin (works local + production)
+const origin = Astro.url?.origin ?? "";
+
+// ✅ Redirect to the correct thanks page (absolute URL is safest for embedded forms)
+const thanksPath = lang === "es" ? "/es/thanks/" : "/thanks/";
+const redirectUrl = origin ? `${origin}${thanksPath}` : thanksPath;
+
+// ✅ Pass language + redirect into the Tally embed URL safely
+const srcUrl = new URL(formUrl);
+srcUrl.searchParams.set("lang", lang);
+srcUrl.searchParams.set("redirect", redirectUrl);
+
+// Optional but safe: tell Tally this is embedded (some builders use it)
+srcUrl.searchParams.set("embed", "1");
+
+// Final URL string
+const iframeSrc = srcUrl.toString();
+---
+
+<section id="quote" class="border-t border-slate-200/60 bg-brand-50">
+  <div class="mx-auto max-w-6xl px-4 py-12">
+    <div class="grid gap-8 lg:grid-cols-2 lg:items-start">
+      <div>
+        <h2 class="text-2xl font-extrabold text-brand-900">
+          {t.quote.title}
+        </h2>
+        <p class="mt-2 text-slate-700">
+          {t.quote.subtitle}
+        </p>
+
+        <div class="mt-5 grid gap-3 sm:grid-cols-2">
+          <div class="card">
+            <p class="text-sm font-bold text-brand-900">{t.quote.b1Title}</p>
+            <p class="mt-1 text-sm text-slate-700">{t.quote.b1Desc}</p>
+          </div>
+          <div class="card">
+            <p class="text-sm font-bold text-brand-900">{t.quote.b2Title}</p>
+            <p class="mt-1 text-sm text-slate-700">{t.quote.b2Desc}</p>
+          </div>
+          <div class="card sm:col-span-2">
+            <p class="text-sm font-bold text-brand-900">{t.quote.b3Title}</p>
+            <p class="mt-1 text-sm text-slate-700">{t.quote.b3Desc}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="overflow-hidden rounded-3xl bg-white shadow-soft ring-1 ring-slate-200/60">
+        <div class="border-b border-slate-200/60 bg-white px-5 py-4">
+          <p class="text-sm font-extrabold text-brand-900">{t.quote.formTitle}</p>
+          <p class="mt-1 text-xs text-slate-600">{t.quote.formNote}</p>
+        </div>
+
+        <div class="p-2 sm:p-4">
+          <iframe
+            title={t.quote.formTitle}
+            src={iframeSrc}
+            loading="lazy"
+            class="h-180 w-full rounded-2xl"
+            style="border:0;"
+            allow="camera; microphone; geolocation"
+          ></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

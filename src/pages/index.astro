@@ -1,0 +1,67 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Nav from "../components/Nav.astro";
+import Hero from "../components/Hero.astro";
+import Services from "../components/Services.astro";
+import WhatsAppFab from "../components/WhatsAppFab.astro";
+import Footer from "../components/Footer.astro";
+import QuotesForm from "../components/QuotesForm.astro";
+
+import site from "../content/site.json";
+import { getT } from "../i18n/t";
+import GalleryLive from "../components/GalleryLive.astro";
+
+const lang = "en";
+const t = getT(lang);
+
+const canonical = "https://RLCprofessional.com/";
+const title = site.meta.title;
+const description = site.meta.description;
+
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "HomeAndConstructionBusiness",
+  "name": site.brandName,
+  "url": canonical,
+  "image": `https://RLCprofessional.com${site.assets.ogImage}`,
+  "email": "romangaitan221@gmail.com",
+  "telephone": site.phoneTel,
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "2450 Myrtle Ave",
+    "addressLocality": "Haines City",
+    "addressRegion": "FL",
+    "postalCode": "33844",
+    "addressCountry": "US"
+  },
+  "areaServed": ["Haines City, FL", "Kissimmee, FL", "Davenport, FL"],
+  "serviceType": [
+    "Interior Painting",
+    "Exterior Painting",
+    "Pressure Washing",
+    "Concrete Cleaning",
+    "Roof Leak Repair"
+  ]
+};
+---
+
+<BaseLayout
+  lang={lang}
+  title={title}
+  description={description}
+  canonical={canonical}
+  ogImage={site.assets.ogImage}
+>
+  <Nav t={t} site={site} lang={lang} />
+  <Hero t={t} site={site}/>
+  <Services t={t} />
+  <QuotesForm t={t} formUrl={site.tallyFormUrlEn} />
+  <GalleryLive t={t} site={site} lang={lang} />
+
+  <Footer site={site} t={t} />
+  <WhatsAppFab site={site} />
+
+  <script type="application/ld+json">
+    {JSON.stringify(schema)}
+  </script>
+</BaseLayout>

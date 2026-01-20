@@ -1,0 +1,47 @@
+---
+import site from "../content/site.json";
+
+// ✅ Do NOT rely on props (they may not be passed). Detect language from URL.
+const path = Astro.url?.pathname ?? "/";
+const isEs = path === "/es" || path.startsWith("/es/");
+
+const lang = (isEs ? "es" : "en") as "en" | "es";
+
+const message =
+  lang === "es"
+    ? "Hola Roman, me gustaría solicitar un presupuesto."
+    : "Hi Roman, I’d like to request a quote.";
+
+// ✅ wa.me requires digits only
+const whatsappNumberRaw = (site as any)?.whatsappNumber ?? "";
+const whatsappNumber = String(whatsappNumberRaw).replace(/\D/g, "");
+
+// ✅ Always use wa.me (better mobile handling)
+const waUrl = whatsappNumber
+  ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`
+  : `https://wa.me/?text=${encodeURIComponent(message)}`;
+---
+
+<a
+  href={waUrl}
+  target="_blank"
+  rel="noopener"
+  aria-label={lang === "es" ? "Abrir WhatsApp" : "Open WhatsApp"}
+  class="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-accent-500 text-white shadow-soft ring-1 ring-black/5 transition hover:bg-accent-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500 focus-visible:ring-offset-2"
+>
+  <span class="sr-only">{lang === "es" ? "Abrir WhatsApp" : "Open WhatsApp"}</span>
+
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    class="h-7 w-7"
+    aria-hidden="true"
+  >
+    <path
+      fill-rule="evenodd"
+      d="M4.804 21.644a.75.75 0 0 0 .852.102l3.335-1.927a9.73 9.73 0 0 0 2.996.46c5.385 0 9.75-3.97 9.75-8.864S17.372 2.55 11.987 2.55 2.237 6.52 2.237 11.415c0 2.196.905 4.205 2.411 5.74l-.844 4.489Zm4.75-4.38a.75.75 0 0 0-.67-.026l-2.1 1.214.52-2.767a.75.75 0 0 0-.2-.664c-1.43-1.47-2.262-3.346-2.262-5.606 0-4.04 3.673-7.364 8.145-7.364 4.473 0 8.145 3.324 8.145 7.364s-3.672 7.364-8.145 7.364c-1.035 0-2.057-.165-3.02-.507a.75.75 0 0 0-.638.055l-.775.448Z"
+      clip-rule="evenodd"
+    />
+  </svg>
+</a>

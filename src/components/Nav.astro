@@ -1,0 +1,133 @@
+---
+const { t, site, lang } = Astro.props as {
+  t: any;
+  site: any;
+  lang: "en" | "es";
+};
+
+const phoneTel = site.phoneTel;
+const phoneDisplay = site.phoneDisplay;
+
+const langHref = lang === "en" ? "/es/" : "/";
+
+// For consistent “home” href in both langs
+const homeHref = lang === "en" ? "/" : "/es/";
+---
+
+<header class="sticky top-0 z-50 border-b border-slate-200/60 bg-white/85 backdrop-blur supports-backdrop-filter:bg-white/70">
+  <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+    <a href={homeHref} class="flex items-center gap-3">
+      <img
+        src={site.assets.logo}
+        alt={site.brandName}
+        class="h-10 w-auto"
+        loading="eager"
+        decoding="async"
+      />
+      <div class="hidden sm:block">
+        <p class="text-sm font-semibold text-brand-900">{site.brandName}</p>
+        <p class="text-xs text-slate-600">Haines City • Kissimmee • Davenport</p>
+      </div>
+    </a>
+
+    <!-- Desktop nav -->
+    <nav class="hidden items-center gap-6 md:flex" aria-label="Primary">
+      <a class="navlink" href="#services">{t.nav.services}</a>
+      <a class="navlink" href="#quote">{t.nav.quote}</a>
+      <a class="navlink" href="#contact">{t.nav.contact}</a>
+
+      <!-- Language toggle (segmented feel) -->
+      <a
+        class="btn btn-outline px-4"
+        href={langHref}
+        aria-label="Toggle language"
+        title={t.nav.toggle}
+      >
+        {t.nav.toggle}
+      </a>
+
+      <!-- Primary conversion -->
+      <a class="btn btn-primary" href={`tel:${phoneTel}`} aria-label={t.nav.callNow}>
+        {t.nav.callNow}: {phoneDisplay}
+      </a>
+    </nav>
+
+    <!-- Mobile -->
+    <div class="flex items-center gap-2 md:hidden">
+      <a class="btn btn-outline px-3" href={langHref} aria-label="Toggle language" title={t.nav.toggle}>
+        {t.nav.toggle}
+      </a>
+
+      <a class="btn btn-primary" href={`tel:${phoneTel}`} aria-label={t.nav.callNow}>
+        {t.nav.callNow}
+      </a>
+
+      <!-- Menu button -->
+      <button
+        id="menuBtn"
+        type="button"
+        class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200/70 bg-white/90 text-brand-900 shadow-soft ring-1 ring-black/5 transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500 focus-visible:ring-offset-2"
+        aria-label="Open menu"
+        aria-expanded="false"
+        aria-controls="mobileMenu"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5" aria-hidden="true">
+          <path fill-rule="evenodd" d="M3.75 6.75A.75.75 0 0 1 4.5 6h15a.75.75 0 0 1 0 1.5h-15a.75.75 0 0 1-.75-.75ZM3.75 12a.75.75 0 0 1 .75-.75h15a.75.75 0 0 1 0 1.5h-15A.75.75 0 0 1 3.75 12Zm.75 5.25a.75.75 0 0 0 0 1.5h15a.75.75 0 0 0 0-1.5h-15Z" clip-rule="evenodd" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile dropdown menu -->
+  <div id="mobileMenu" class="hidden border-t border-slate-200/60 bg-white/95 backdrop-blur">
+    <div class="mx-auto max-w-6xl px-4 py-4">
+      <div class="grid gap-2">
+        <a class="navlink block rounded-xl px-3 py-2 hover:bg-brand-50" href="#services">{t.nav.services}</a>
+        <a class="navlink block rounded-xl px-3 py-2 hover:bg-brand-50" href="#quote">{t.nav.quote}</a>
+        <a class="navlink block rounded-xl px-3 py-2 hover:bg-brand-50" href="#contact">{t.nav.contact}</a>
+      </div>
+
+      <div class="mt-4 flex flex-col gap-2">
+        <a class="btn btn-primary w-full" href={`tel:${phoneTel}`} aria-label={t.nav.callNow}>
+          {t.nav.callNow}: {phoneDisplay}
+        </a>
+        <a class="btn btn-outline w-full" href={langHref} aria-label="Toggle language">
+          {t.nav.toggle}
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script is:inline>
+    const btn = document.getElementById("menuBtn");
+    const menu = document.getElementById("mobileMenu");
+
+    function closeMenu() {
+      if (!btn || !menu) return;
+      menu.classList.add("hidden");
+      btn.setAttribute("aria-expanded", "false");
+    }
+
+    function toggleMenu() {
+      if (!btn || !menu) return;
+      const isOpen = !menu.classList.contains("hidden");
+      if (isOpen) closeMenu();
+      else {
+        menu.classList.remove("hidden");
+        btn.setAttribute("aria-expanded", "true");
+      }
+    }
+
+    btn?.addEventListener("click", toggleMenu);
+
+    // Close on link click (mobile)
+    menu?.querySelectorAll("a[href^='#']").forEach((a) => {
+      a.addEventListener("click", closeMenu);
+    });
+
+    // Close on escape
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeMenu();
+    });
+  </script>
+</header>

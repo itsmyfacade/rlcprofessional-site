@@ -1,0 +1,521 @@
+---
+import { fetchGalleryFeed, type GalleryItem } from "../lib/galleryFeed";
+
+const { t, site, lang } = Astro.props as { t: any; site: any; lang: "en" | "es" };
+
+const feedEn = site.galleryFeed?.en ?? "";
+const feedEs = site.galleryFeed?.es ?? "";
+
+const [itemsEn, itemsEs] = await Promise.all([fetchGalleryFeed(feedEn, 60), fetchGalleryFeed(feedEs, 60)]);
+
+const mergedMap = new Map<string, GalleryItem>();
+for (const it of [...itemsEn, ...itemsEs]) mergedMap.set(it.id, it);
+const merged = Array.from(mergedMap.values());
+
+merged.sort((a, b) => {
+  const ta = a.createdAt ? Date.parse(a.createdAt) : 0;
+  const tb = b.createdAt ? Date.parse(b.createdAt) : 0;
+  return tb - ta;
+});
+
+const items: GalleryItem[] = merged.slice(0, 18);
+
+const nav = t?.nav ?? {};
+const gallery = t?.gallery ?? {};
+
+const ui = {
+  title: gallery.title ?? (lang === "es" ? "Trabajos Recientes (Antes y Después)" : "Recent Work (Before & After)"),
+  subtitle:
+    gallery.subtitle ??
+    (lang === "es"
+      ? "Resultados reales de pintura, lavado a presión, concreto y sellado en Central Florida."
+      : "Real results from painting, pressure washing, concrete, and sealing across Central Florida."),
+  empty:
+    gallery.empty ??
+    (lang === "es"
+      ? "Pronto subiremos fotos. Por ahora, solicite un presupuesto - puede subir fotos en el formulario."
+      : "Gallery updates are coming soon. For now, request a quote - photo uploads are supported."),
+  before: gallery.before ?? (lang === "es" ? "Antes" : "Before"),
+  after: gallery.after ?? (lang === "es" ? "Después" : "After"),
+  viewMedia: gallery.viewMedia ?? (lang === "es" ? "Ver contenido" : "View Media"),
+  openLink: gallery.openLink ?? (lang === "es" ? "Abrir enlace" : "Open shared link"),
+  untitled: gallery.untitled ?? (lang === "es" ? "Proyecto reciente" : "Recent Project"),
+  quoteCta: nav.quote ?? (lang === "es" ? "Cotizar" : "Get a Quote"),
+  loading: gallery.loading ?? (lang === "es" ? "Cargando…" : "Loading…"),
+};
+
+function hasAnyMedia(it: GalleryItem) {
+  return Boolean(
+    it.beforeUrl ||
+      it.afterUrl ||
+      it.videoUrl ||
+      (it.morePhotoUrls && it.morePhotoUrls.length > 0) ||
+      it.publicEmbedUrl ||
+      it.publicLink
+  );
+}
+
+function isTwoPhoto(it: GalleryItem) {
+  return Boolean(it.beforeUrl && it.afterUrl && it.beforeUrl !== it.afterUrl);
+}
+
+function hasMulti(it: GalleryItem) {
+  return Boolean(it.morePhotoUrls && it.morePhotoUrls.length > 1);
+}
+
+function singlePhotoSrc(it: GalleryItem) {
+  return (it.morePhotoUrls && it.morePhotoUrls[0]) || it.beforeUrl || it.afterUrl || "";
+}
+
+function isDrive(u?: string) {
+  return Boolean(u && /drive\.google\.com/i.test(u));
+}
+
+function looksLikeDriveId(u?: string) {
+  if (!u) return false;
+  const s = u.trim();
+  return /^[a-zA-Z0-9_-]{20,120}$/.test(s) && !s.includes("/");
+}
+
+function driveId(u: string) {
+  const s = u.trim();
+  if (looksLikeDriveId(s)) return s;
+
+  const m1 = s.match(/drive\.google\.com\/file\/d\/([^/]+)/i);
+  if (m1?.[1]) return m1[1];
+
+  const m2 = s.match(/[?&]id=([^&]+)/i);
+  if (m2?.[1]) return m2[1];
+
+  return null;
+}
+
+function driveProxy(u: string) {
+  const id = driveId(u);
+  if (!id) return null;
+  return `/api/drive-video/${id}`;
+}
+
+function isDriveProxySrc(u?: string) {
+  return Boolean(u && /^\/api\/drive-video\/[^/]+$/i.test(u));
+}
+
+function isEmbedVideo(it: GalleryItem) {
+  return Boolean(it.publicEmbedKind === "video" && (it.publicLink || it.publicEmbedUrl));
+}
+
+function isSinglePhoto(it: GalleryItem) {
+  if (isEmbedVideo(it)) return false;
+
+  return Boolean(
+    (it.morePhotoUrls && it.morePhotoUrls.length === 1) ||
+      (it.beforeUrl && !it.afterUrl) ||
+      (it.afterUrl && !it.beforeUrl) ||
+      (it.beforeUrl && it.afterUrl && it.beforeUrl === it.afterUrl)
+  );
+}
+
+function normalizeVideoSrc(u?: string) {
+  if (!u) return "";
+  const s = u.trim();
+
+  if (isDriveProxySrc(s)) return s;
+  if (looksLikeDriveId(s)) return `/api/drive-video/${s}`;
+  if (isDrive(s)) return driveProxy(s) || s;
+
+  return s;
+}
+---
+
+<section id="gallery" class="border-t border-slate-200/60 bg-brand-50">
+  <div class="mx-auto max-w-6xl px-4 py-12">
+    <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+      <div class="max-w-2xl">
+        <h2 class="text-2xl font-extrabold text-brand-900">{ui.title}</h2>
+        <p class="mt-1 text-slate-700">{ui.subtitle}</p>
+      </div>
+
+      <a href="#quote" class="btn btn-accent w-fit">{ui.quoteCta}</a>
+    </div>
+
+    {items.filter(hasAnyMedia).length === 0 ? (
+      <div class="mt-8 rounded-3xl bg-white p-6 shadow-soft ring-1 ring-slate-200/60">
+        <p class="text-sm text-slate-700">{ui.empty}</p>
+      </div>
+    ) : (
+      <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {items.filter(hasAnyMedia).map((it: GalleryItem) => (
+          <article class="card group overflow-hidden">
+            <div class="flex items-center justify-between gap-2">
+              <p class="text-xs font-extrabold text-brand-900">{it.serviceType || ui.untitled}</p>
+              <p class="text-[11px] text-slate-500">{it.city}</p>
+            </div>
+
+            {/* ✅ VIDEO FIRST */}
+            {it.videoUrl ? (
+              <div class="mt-3 overflow-hidden rounded-2xl ring-1 ring-slate-200/60 bg-white">
+                <div class="aspect-video w-full bg-white relative overflow-hidden" data-video-box>
+                  <video
+                    class="js-autoplay-video js-hardloop-video js-video-shell js-video-failsafe absolute inset-0 h-full w-full object-contain object-center bg-white"
+                    autoplay
+                    muted
+                    playsinline
+                    loop
+                    preload="metadata"
+                    controlslist="nodownload noplaybackrate"
+                    poster="/assets/rlc-logo.png"
+                    data-is-proxy={isDriveProxySrc(normalizeVideoSrc(it.videoUrl)) ? "1" : "0"}
+                    style="opacity:0"
+                  >
+                    <source src={normalizeVideoSrc(it.videoUrl)} />
+                  </video>
+
+                  <div class="js-video-loader js-video-loader-failsafe absolute inset-0 flex items-center justify-center bg-white">
+                    <div class="flex items-center gap-3 rounded-full bg-white px-4 py-2 ring-1 ring-slate-200/70 shadow-soft">
+                      <img
+                        src="/assets/rlc-logo.png"
+                        alt="RLC"
+                        class="js-rlc-pulse h-6 w-6 object-contain"
+                        loading="eager"
+                        decoding="async"
+                      />
+                      <span class="text-xs font-semibold text-slate-700">{ui.loading}</span>
+                    </div>
+                  </div>
+
+                  <div class="js-video-fail absolute inset-0 hidden items-center justify-center bg-white">
+                    <div class="rounded-2xl bg-white px-4 py-3 ring-1 ring-slate-200/70 shadow-soft">
+                      <p class="text-xs font-semibold text-slate-700">Video unavailable right now. Please refresh.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : isEmbedVideo(it) ? (
+              <div class="mt-3 overflow-hidden rounded-2xl ring-1 ring-slate-200/60 bg-white">
+                <div class="aspect-video w-full bg-white relative overflow-hidden" data-video-box>
+                  {it.publicLink && isDrive(it.publicLink) ? (
+                    <div class="absolute inset-0" data-drive-wrap>
+                      <video
+                        class="js-autoplay-video js-hardloop-video js-drive-proxy js-video-shell js-video-failsafe absolute inset-0 h-full w-full object-contain object-center bg-white"
+                        autoplay
+                        muted
+                        playsinline
+                        loop
+                        preload="metadata"
+                        controlslist="nodownload noplaybackrate"
+                        poster="/assets/rlc-logo.png"
+                        style="opacity:0"
+                      >
+                        <source src={driveProxy(it.publicLink) || ""} />
+                      </video>
+
+                      <div class="js-video-loader js-video-loader-failsafe absolute inset-0 flex items-center justify-center bg-white">
+                        <div class="flex items-center gap-3 rounded-full bg-white px-4 py-2 ring-1 ring-slate-200/70 shadow-soft">
+                          <img
+                            src="/assets/rlc-logo.png"
+                            alt="RLC"
+                            class="js-rlc-pulse h-6 w-6 object-contain"
+                            loading="eager"
+                            decoding="async"
+                          />
+                          <span class="text-xs font-semibold text-slate-700">{ui.loading}</span>
+                        </div>
+                      </div>
+
+                      <div class="js-video-fail absolute inset-0 hidden items-center justify-center bg-white">
+                        <div class="rounded-2xl bg-white px-4 py-3 ring-1 ring-slate-200/70 shadow-soft">
+                          <p class="text-xs font-semibold text-slate-700">Video unavailable right now. Please refresh.</p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <iframe
+                      class="absolute inset-0 h-full w-full"
+                      src={it.publicEmbedUrl || it.publicLink}
+                      allow="autoplay; fullscreen; encrypted-media"
+                      loading="lazy"
+                      referrerpolicy="no-referrer"
+                    ></iframe>
+                  )}
+                </div>
+              </div>
+            ) : isTwoPhoto(it) ? (
+              <div class="mt-3 grid grid-cols-2 gap-2">
+                <figure class="relative overflow-hidden rounded-2xl ring-1 ring-slate-200/60">
+                  <img
+                    src={it.beforeUrl!}
+                    alt={`Before - ${it.serviceType ?? ""}`}
+                    class="h-44 w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                    loading="lazy"
+                    decoding="async"
+                    referrerpolicy="no-referrer"
+                  />
+                  <figcaption class="absolute left-2 top-2 rounded-full bg-black/55 px-2 py-1 text-[10px] font-bold text-white">
+                    {ui.before}
+                  </figcaption>
+                </figure>
+
+                <figure class="relative overflow-hidden rounded-2xl ring-1 ring-slate-200/60">
+                  <img
+                    src={it.afterUrl!}
+                    alt={`After - ${it.serviceType ?? ""}`}
+                    class="h-44 w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                    loading="lazy"
+                    decoding="async"
+                    referrerpolicy="no-referrer"
+                  />
+                  <figcaption class="absolute left-2 top-2 rounded-full bg-accent-500 px-2 py-1 text-[10px] font-bold text-white">
+                    {ui.after}
+                  </figcaption>
+                </figure>
+              </div>
+            ) : hasMulti(it) ? (
+              <div class="mt-3 grid grid-cols-2 gap-2">
+                {it.morePhotoUrls!.slice(0, 4).map((src, idx) => (
+                  <figure class="relative overflow-hidden rounded-2xl ring-1 ring-slate-200/60">
+                    <img
+                      src={src}
+                      alt={`${it.serviceType ?? "Project"} photo ${idx + 1}`}
+                      class="h-28 w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                      loading="lazy"
+                      decoding="async"
+                      referrerpolicy="no-referrer"
+                    />
+                  </figure>
+                ))}
+              </div>
+            ) : isSinglePhoto(it) ? (
+              <div class="mt-3 relative overflow-hidden rounded-2xl ring-1 ring-slate-200/60">
+                <img
+                  src={singlePhotoSrc(it)}
+                  alt={`${it.serviceType ?? "Project"} photo`}
+                  class="h-56 w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                  loading="lazy"
+                  decoding="async"
+                  referrerpolicy="no-referrer"
+                />
+                <div class="absolute left-2 top-2 rounded-full bg-black/55 px-2 py-1 text-[10px] font-bold text-white">
+                  {ui.viewMedia}
+                </div>
+              </div>
+            ) : (
+              <div class="mt-3 flex h-56 items-center justify-center rounded-2xl bg-white ring-1 ring-slate-200/60">
+                <a class="btn btn-outline" href={it.publicLink} target="_blank" rel="noopener">
+                  {ui.openLink}
+                </a>
+              </div>
+            )}
+
+            {it.caption ? <p class="mt-3 text-sm leading-relaxed text-slate-700">{it.caption}</p> : null}
+
+            {it.publicLink ? (
+              <div class="mt-3">
+                <a class="text-sm font-semibold text-accent-700 underline" href={it.publicLink} target="_blank" rel="noopener">
+                  {ui.openLink}
+                </a>
+              </div>
+            ) : null}
+          </article>
+        ))}
+      </div>
+    )}
+  </div>
+
+  <style>
+    @keyframes rlcPulse {
+      0% { transform: scale(1); opacity: 0.9; }
+      50% { transform: scale(1.08); opacity: 1; }
+      100% { transform: scale(1); opacity: 0.9; }
+    }
+    .js-rlc-pulse {
+      animation: rlcPulse 1.2s ease-in-out infinite;
+      will-change: transform, opacity;
+    }
+
+    /* ✅ Hard failsafe: loader cannot stay forever even if JS/video events never fire */
+    @keyframes loaderFadeOut {
+      to { opacity: 0; visibility: hidden; pointer-events: none; }
+    }
+    @keyframes videoFadeIn {
+      to { opacity: 1; }
+    }
+
+    /* After 2.6s, loader fades out no matter what */
+    .js-video-loader-failsafe {
+      animation: loaderFadeOut 200ms ease forwards;
+      animation-delay: 2.6s;
+    }
+
+    /* After loader fades, video fades in no matter what (poster covers if video isn't ready) */
+    .js-video-failsafe {
+      animation: videoFadeIn 200ms ease forwards;
+      animation-delay: 2.8s;
+    }
+  </style>
+
+  <script is:inline>
+    {`
+      const forceMute = (el) => {
+        if (!el) return;
+        try { el.muted = true; el.volume = 0; el.defaultMuted = true; } catch (_) {}
+      };
+
+      const tryPlay = (v) => {
+        if (!v) return;
+        forceMute(v);
+        v.playsInline = true;
+
+        // IMPORTANT: do not spam load() (it can cause cancel/restart loops)
+        if (!v.__didInitialLoad) {
+          v.__didInitialLoad = true;
+          try { v.load?.(); } catch (_) {}
+        }
+
+        const p = v.play?.();
+        if (p && typeof p.catch === "function") p.catch(() => {});
+      };
+
+      const hardLoop = (v) => {
+        if (!v) return;
+        v.addEventListener("ended", () => {
+          try { v.currentTime = 0; tryPlay(v); } catch (_) {}
+        }, { passive: true });
+      };
+
+      const hideLoader = (videoEl) => {
+        const box = videoEl?.closest?.("[data-video-box]");
+        if (!box) return;
+
+        const loader = box.querySelector(".js-video-loader");
+        if (loader && !loader.__gone) {
+          loader.__gone = true;
+          loader.style.transition = "opacity 180ms ease";
+          loader.style.opacity = "0";
+          loader.style.pointerEvents = "none";
+          setTimeout(() => loader.remove?.(), 220);
+        }
+
+        try {
+          videoEl.style.transition = "opacity 180ms ease";
+          videoEl.style.opacity = "1";
+        } catch (_) {}
+      };
+
+      const showFail = (videoEl) => {
+        const box = videoEl?.closest?.("[data-video-box]");
+        if (!box) return;
+
+        const loader = box.querySelector(".js-video-loader");
+        if (loader) {
+          loader.style.transition = "opacity 180ms ease";
+          loader.style.opacity = "0";
+          loader.style.pointerEvents = "none";
+          setTimeout(() => loader.remove?.(), 220);
+        }
+
+        const fail = box.querySelector(".js-video-fail");
+        if (fail) fail.classList.remove("hidden");
+
+        try { videoEl.pause?.(); } catch (_) {}
+        videoEl.style.display = "none";
+      };
+
+      const bufferedHasData = (v) => {
+        try {
+          if (!v.buffered || v.buffered.length === 0) return false;
+          const end = v.buffered.end(v.buffered.length - 1);
+          return end && end > 0.05;
+        } catch (_) {
+          return false;
+        }
+      };
+
+      const attachDebug = (v) => {
+        if (!v || v.__debugAttached) return;
+        v.__debugAttached = true;
+
+        const log = (msg, extra) => console.log(\`[gallery video] \${msg}\`, extra || "");
+
+        v.addEventListener("error", () => {
+          const err = v.error;
+          log("ERROR event fired", {
+            code: err?.code,
+            message: err?.message,
+            src: v.currentSrc,
+            networkState: v.networkState,
+            readyState: v.readyState,
+          });
+        });
+
+        v.addEventListener("stalled", () => log("stalled", { src: v.currentSrc }), { passive: true });
+        v.addEventListener("abort", () => log("abort", { src: v.currentSrc }), { passive: true });
+        v.addEventListener("waiting", () => log("waiting", { src: v.currentSrc }), { passive: true });
+
+        v.addEventListener("loadedmetadata", () => log("loadedmetadata", { duration: v.duration, vw: v.videoWidth, vh: v.videoHeight }), { passive: true });
+        v.addEventListener("loadeddata", () => log("loadeddata", { readyState: v.readyState }), { passive: true });
+        v.addEventListener("canplay", () => log("canplay", { readyState: v.readyState }), { passive: true });
+        v.addEventListener("playing", () => log("playing", { currentTime: v.currentTime }), { passive: true });
+
+        try { log("canPlayType(video/mp4)", v.canPlayType("video/mp4")); } catch {}
+      };
+
+      const attachRealReveal = (v) => {
+        if (!v || v.__revealAttached) return;
+        v.__revealAttached = true;
+
+        const revealIfReal = () => {
+          const hasFrameInfo = (v.videoWidth && v.videoWidth > 0) || (v.videoHeight && v.videoHeight > 0);
+          if (bufferedHasData(v) || hasFrameInfo || (v.readyState && v.readyState >= 2) || v.currentTime > 0.03) {
+            hideLoader(v);
+          }
+        };
+
+        v.addEventListener("playing", revealIfReal, { passive: true });
+        v.addEventListener("canplay", revealIfReal, { passive: true });
+        v.addEventListener("loadeddata", revealIfReal, { passive: true });
+        v.addEventListener("loadedmetadata", revealIfReal, { passive: true });
+        v.addEventListener("progress", revealIfReal, { passive: true });
+
+        // ✅ HARD UX FIX: never allow infinite loader — reveal after 2.5s no matter what
+        setTimeout(() => {
+          if (!v.__forcedRevealDone) {
+            v.__forcedRevealDone = true;
+            hideLoader(v);
+          }
+        }, 2500);
+
+        if (typeof v.requestVideoFrameCallback === "function") {
+          try { v.requestVideoFrameCallback(() => revealIfReal()); } catch (_) {}
+        }
+
+        v.addEventListener("error", () => showFail(v), { passive: true });
+
+        setTimeout(() => {
+          const hasFrameInfo = (v.videoWidth && v.videoWidth > 0) || (v.videoHeight && v.videoHeight > 0);
+          if (!bufferedHasData(v) && !hasFrameInfo && (!v.readyState || v.readyState < 2) && v.currentTime <= 0.01) {
+            showFail(v);
+          }
+        }, 15000);
+      };
+
+      const boot = () => {
+        document.querySelectorAll("video.js-autoplay-video").forEach((v) => {
+          forceMute(v);
+          attachDebug(v);
+          attachRealReveal(v);
+          hardLoop(v);
+          tryPlay(v);
+
+          v.addEventListener("loadedmetadata", () => tryPlay(v), { passive: true });
+          v.addEventListener("canplay", () => tryPlay(v), { passive: true });
+        });
+      };
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", boot, { passive: true });
+      } else {
+        boot();
+      }
+    `}
+  </script>
+</section>

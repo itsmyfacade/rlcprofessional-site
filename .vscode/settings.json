@@ -1,0 +1,12 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "files.eol": "\n",
+  "prettier.requireConfig": true,
+  "tailwindCSS.emmetCompletions": true,
+  "tailwindCSS.classAttributes": ["class", "className"],
+  "[astro]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
+  
+}

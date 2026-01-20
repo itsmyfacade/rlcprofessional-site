@@ -1,0 +1,93 @@
+{
+  "nav": {
+    "services": "Servicios",
+    "quote": "Cotizar",
+    "contact": "Contacto",
+    "callNow": "Llamar ahora",
+    "toggle": "EN"
+  },
+  "hero": {
+    "badge": "Profesionales Locales • Cotizacion Rapida",
+    "title": "Pintura Profesional, Lavado a Presion y Reparación de Goteras",
+    "subtitle": "Sirviendo Haines City, Kissimmee y Davenport. Preparación limpia, acabados duraderos y precios honestos.",
+    "cta": "Cotización Gratis",
+    "callNow": "Llamar ahora",
+    "bullets": {
+      "b1": "Estimados rapidos (con fotos)",
+      "b2": "Preparación limpia y acabado profesional",
+      "b3": "Pintura • Lavado • Concreto • Reparaciones",
+      "b4": "Haines City • Kissimmee • Davenport"
+    },
+    "cardTitle": "Lavado a presión + sellado disponible",
+    "cardSubtitle": "Mantenga el concreto como nuevo y protegido.",
+    "stats": {
+      "s1Label": "Respuesta",
+      "s1Value": "Rapida",
+      "s2Label": "Trabajo",
+      "s2Value": "Limpio",
+      "s3Label": "Resultados",
+      "s3Value": "Pro"
+    },
+    "contactLinePrefix": "Email:",
+    "addressLine": "Haines City, FL 33844"
+  },
+  "services": {
+    "title": "Servicios",
+    "subtitle": "Soluciones profesionales disenadas para el clima de Florida.",
+    "cards": [
+      {
+        "title": "Pintura Interior",
+        "desc": "Paredes, techos y molduras con preparación limpia, protección y acabados suaves."
+      },
+      {
+        "title": "Pintura Exterior",
+        "desc": "Recubrimientos duraderos para estuco y siding, resistentes al calor y la humedad."
+      },
+      {
+        "title": "Instalacion y Reparación de Concreto",
+        "desc": "Driveways, aceras y caminos de concreto instalados o reparados profesionalmente."
+      },
+      {
+        "title": "Curbas y Bordes de Concreto",
+        "desc": "Curbing y bordes de concreto personalizados para propiedades residenciales y comerciales."
+      },
+      {
+        "title": "Lavado a Presion y Sellado",
+        "desc": "Limpieza profunda y sellado protector para mantener el concreto como nuevo."
+      }
+    ]
+  },
+  "quote": {
+    "title": "Solicitar Cotizacion Gratis",
+    "subtitle": "Envíe su información y fotos - Roman responderá rápido con el precio y los próximos pasos.",
+    "b1Title": "Respuesta rápida",
+    "b1Desc": "Revisamos fotos rápidamente para darle un estimado sin demoras.",
+    "b2Title": "Trabajo profesional",
+    "b2Desc": "Buena preparación, materiales sólidos y resultados duraderos.",
+    "b3Title": "Concreto + Lavado + Sellado",
+    "b3Desc": "Instalamos/reparamos concreto y lo mantenemos como nuevo con lavado a presión y sellado.",
+    "formTitle": "Formulario de Cotización",
+    "formNote": "Suba fotos para un precio más rápido."
+  },
+  "gallery": {
+    "title": "Trabajos Recientes (Antes y Después)",
+    "subtitle": "Resultados reales de pintura, lavado a presion, concreto y sellado en el area de Central Florida.",
+    "empty": "Pronto subiremos fotos. Por ahora, solicite un presupuesto - puede subir fotos en el formulario.",
+    "before": "Antes",
+    "after": "Después",
+    "viewMedia": "Ver contenido",
+    "openLink": "Abrir enlace",
+    "untitled": "Proyecto reciente"
+  },
+  "footer": {
+    "tagline": "Pintura profesional, lavado a presión y reparacion de goteras.",
+    "contactTitle": "Contacto",
+    "serviceAreaTitle": "Area de servicio",
+    "emailLabel": "Email:",
+    "phoneLabel": "Teléfono:",
+    "addressLabel": "Direccion:",
+    "rights": "Todos los derechos reservados.",
+    "privacy": "Politica de Privacidad",
+    "terms": "Terminos del Servicio"
+  }
+}

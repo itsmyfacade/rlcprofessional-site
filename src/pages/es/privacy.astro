@@ -1,0 +1,42 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import site from "../../content/site.json";
+---
+
+<BaseLayout
+  lang="es"
+  title="Política de Privacidad | RLC Professional"
+  description="Política de privacidad de RLC Professional."
+  canonical={`${site.meta}/es/privacy`}
+  ogImage={site.assets.ogImage}
+>
+  <main class="mx-auto max-w-4xl px-4 py-12 text-slate-800">
+    <h1 class="text-3xl font-extrabold text-brand-900">Política de Privacidad</h1>
+
+    <section class="mt-8 space-y-4 text-sm leading-relaxed">
+      <p>
+        RLC Professional respeta su privacidad. Solo recopilamos información necesaria para brindar cotizaciones y servicios.
+      </p>
+
+      <h2 class="mt-6 text-lg font-bold">Información Recopilada</h2>
+      <p>
+        Nombre, teléfono, correo electrónico, fotos y detalles del servicio enviados por formularios.
+      </p>
+
+      <h2 class="mt-6 text-lg font-bold">Uso de la Información</h2>
+      <p>
+        Usamos la información únicamente para responder consultas y brindar servicios.
+      </p>
+
+      <h2 class="mt-6 text-lg font-bold">Compartición</h2>
+      <p>
+        No vendemos ni compartimos información personal.
+      </p>
+
+      <h2 class="mt-6 text-lg font-bold">Contacto</h2>
+      <p>
+        Para preguntas, escriba a <a class="underline" href={`mailto:${site.email}`}>{site.email}</a>.
+      </p>
+    </section>
+  </main>
+</BaseLayout>

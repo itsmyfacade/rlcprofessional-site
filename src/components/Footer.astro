@@ -1,0 +1,76 @@
+---
+const { t, site, lang } = Astro.props as {
+  t: any;
+  site: any;
+  lang: "en" | "es";
+};
+
+const year = new Date().getFullYear();
+
+const footer = t?.footer ?? {};
+
+const ui = {
+  tagline:
+    footer.tagline ??
+    (lang === "es"
+      ? "Pintura profesional, lavado a presion y reparación de goteras en techos."
+      : "Professional Painting, Pressure Washing, & Roof Leak Repair."),
+  contact: footer.contact ?? (lang === "es" ? "Contacto" : "Contact"),
+  email: footer.email ?? (lang === "es" ? "Correo" : "Email"),
+  phone: footer.phone ?? (lang === "es" ? "Teléfono" : "Phone"),
+  serviceArea: footer.serviceArea ?? (lang === "es" ? "Área de servicio" : "Service Area"),
+  addressLabel: footer.addressLabel ?? (lang === "es" ? "Dirección" : "Address"),
+  rights: footer.rights ?? (lang === "es" ? "Todos los derechos reservados." : "All rights reserved."),
+  privacy: footer.privacy ?? (lang === "es" ? "Política de Privacidad" : "Privacy Policy"),
+  terms: footer.terms ?? (lang === "es" ? "Términos de Servicio" : "Terms of Service"),
+};
+---
+
+<footer id="contact" class="border-t border-slate-200/60 bg-brand-900 text-white">
+  <div class="mx-auto max-w-6xl px-4 py-10">
+    <div class="grid gap-8 md:grid-cols-3">
+      <div>
+        <img
+          src={site.assets.logo}
+          alt={site.brandName}
+          class="h-10 w-auto brightness-0 invert"
+          loading="lazy"
+          decoding="async"
+        />
+        <p class="mt-3 text-sm text-white/80">
+          {ui.tagline}
+        </p>
+      </div>
+
+      <div>
+        <p class="text-sm font-semibold">{ui.contact}</p>
+        <ul class="mt-3 space-y-2 text-sm text-white/80">
+          <li>
+            {ui.email}: <a class="text-white underline" href={`mailto:${site.email}`}>{site.email}</a>
+          </li>
+          <li>
+            {ui.phone}: <a class="text-white underline" href={`tel:${site.phoneTel}`}>{site.phoneDisplay}</a>
+          </li>
+        </ul>
+      </div>
+
+      <div>
+        <p class="text-sm font-semibold">{ui.serviceArea}</p>
+        <p class="mt-3 text-sm text-white/80">
+          Haines City • Kissimmee • Davenport
+        </p>
+        <p class="mt-2 text-xs text-white/60">
+          {ui.addressLabel} Haines City, FL 33844
+        </p>
+      </div>
+    </div>
+
+    <div class="mt-8 flex flex-col gap-2 border-t border-white/10 pt-6 text-xs text-white/60 sm:flex-row sm:items-center sm:justify-between">
+      <p>© {year} {site.brandName}. {ui.rights}</p>
+      <div class="flex gap-4">
+        <a class="underline" href="privacy">{ui.privacy}</a>
+        <a class="underline" href="terms">{ui.terms}</a>
+      </div>
+    </div>
+  </div>
+</footer>

@@ -1,0 +1,93 @@
+{
+  "nav": {
+    "services": "Services",
+    "quote": "Get a Quote",
+    "contact": "Contact",
+    "callNow": "Call Now",
+    "toggle": "ES"
+  },
+  "hero": {
+    "badge": "Trusted Local Pros • Fast Quotes",
+    "title": "Professional Painting, Pressure Washing, & Roof Leak Repair",
+    "subtitle": "Serving Haines City, Kissimmee, and Davenport. Clean prep, durable finishes, and honest pricing.",
+    "cta": "Get a Free Quote",
+    "callNow": "Call Now",
+    "bullets": {
+      "b1": "Fast estimates (photos supported)",
+      "b2": "Clean prep & professional finish",
+      "b3": "Painting • Washing • Concrete • Repairs",
+      "b4": "Serving Haines City • Kissimmee • Davenport"
+    },
+    "cardTitle": "Pressure Washing + Sealing available",
+    "cardSubtitle": "Keep new concrete surfaces looking new and protected.",
+    "stats": {
+      "s1Label": "Response",
+      "s1Value": "Fast",
+      "s2Label": "Work",
+      "s2Value": "Clean",
+      "s3Label": "Results",
+      "s3Value": "Pro"
+    },
+    "contactLinePrefix": "Email:",
+    "addressLine": "Haines City, FL 33844"
+  },
+  "services": {
+    "title": "Services",
+    "subtitle": "Professional exterior solutions built for Florida conditions.",
+    "cards": [
+      {
+        "title": "Interior Painting",
+        "desc": "Walls, ceilings, and trim with clean prep, protection, and smooth finishes."
+      },
+      {
+        "title": "Exterior Painting",
+        "desc": "Durable coatings for stucco and siding-designed to withstand heat and humidity."
+      },
+      {
+        "title": "Concrete Installation & Repair",
+        "desc": "Professional concrete driveways, sidewalks, and walkways-installed or repaired to last."
+      },
+      {
+        "title": "Curbs & Concrete Edging",
+        "desc": "Custom concrete curbing and edging for residential and commercial properties."
+      },
+      {
+        "title": "Pressure Washing & Sealing",
+        "desc": "Deep cleaning and protective sealing for concrete surfaces to keep them looking new."
+      }
+    ]
+  },
+  "quote": {
+    "title": "Get a Free Quote",
+    "subtitle": "Send your details and photos - Roman will reply fast with pricing and next steps.",
+    "b1Title": "Fast response",
+    "b1Desc": "We review photos quickly so you can get an estimate without delays.",
+    "b2Title": "Professional work",
+    "b2Desc": "Clean prep, solid materials, and results that last.",
+    "b3Title": "Concrete + Washing + Sealing",
+    "b3Desc": "We install/repair concrete and keep it looking new with pressure washing and sealing.",
+    "formTitle": "Quote Request Form",
+    "formNote": "Upload photos for faster pricing."
+  },
+  "gallery": {
+    "title": "Recent Work (Before & After)",
+    "subtitle": "Fresh results from painting, pressure washing, concrete, and sealing projects across Central Florida.",
+    "empty": "Gallery updates are coming soon. For now, request a quote - photo uploads are supported.",
+    "before": "Before",
+    "after": "After",
+    "viewMedia": "View Media",
+    "openLink": "Open shared link",
+    "untitled": "Recent Project"
+  },
+  "footer": {
+    "tagline": "Professional Painting, Pressure Washing, & Roof Leak Repair.",
+    "contactTitle": "Contact",
+    "serviceAreaTitle": "Service Area",
+    "emailLabel": "Email:",
+    "phoneLabel": "Phone:",
+    "addressLabel": "Address:",
+    "rights": "All rights reserved.",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service"
+  }
+}
