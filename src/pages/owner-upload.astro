@@ -1,0 +1,54 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Nav from "../components/Nav.astro";
+import site from "../content/site.json";
+import en from "../i18n/en.json";
+const url = new URL(Astro.request.url);
+const key = url.searchParams.get("key") || "";
+const allowed = key && key === import.meta.env.PUBLIC_OWNER_KEY;
+---
+
+<BaseLayout
+  lang="en"
+  title="Owner Upload | RLC Professional"
+  description="Secure owner upload portal."
+  canonical={Astro.url.href}
+  ogImage="/assets/og.jpg"
+>
+  <Nav t={en} site={site} lang="en" />
+
+  <main class="mx-auto max-w-3xl px-4 py-12">
+    <h1 class="text-2xl font-extrabold text-brand-900">Owner Upload</h1>
+    <p class="mt-2 text-slate-700">
+      This page is for the business owner to upload new photos/videos to the website gallery.
+    </p>
+
+    {allowed ? (
+      <div class="mt-6 card">
+        <p class="text-sm text-slate-700">
+          Open the upload form below. (You will still need the Tally password.)
+        </p>
+
+        <div class="mt-4 overflow-hidden rounded-2xl ring-1 ring-slate-200/60 bg-white">
+          <iframe
+            title="RLC Upload Form"
+            src={site.tallyFormUrlEn}
+            loading="lazy"
+            class="w-full"
+            style="height: 78vh;"
+            referrerpolicy="no-referrer"
+          ></iframe>
+        </div>
+      </div>
+    ) : (
+      <div class="mt-6 rounded-2xl bg-white p-5 ring-1 ring-slate-200/60">
+        <p class="text-sm font-semibold text-slate-800">
+          Access denied.
+        </p>
+        <p class="mt-1 text-sm text-slate-600">
+          Use your private owner link.
+        </p>
+      </div>
+    )}
+  </main>
+</BaseLayout>
