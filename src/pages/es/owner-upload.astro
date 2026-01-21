@@ -3,16 +3,20 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import Nav from "../../components/Nav.astro";
 import site from "../../content/site.json";
 import es from "../../i18n/es.json";
-const url = new URL(Astro.request.url);
-const key = url.searchParams.get("key") || "";
-const allowed = key && key === import.meta.env.PUBLIC_OWNER_KEY;
+
+// ✅ Same key used by Nav.astro
+const OWNER_UNLOCK_UNTIL_KEY = "rlc_owner_unlocked_until";
+const homeHref = "/es/";
+
+// Canonical must be a string
+const canonical = Astro.url.href;
 ---
 
 <BaseLayout
   lang="es"
   title="Subida del Dueño | RLC Professional"
   description="Portal seguro para subir contenido."
-  canonical={Astro.url.href}
+  canonical={canonical}
   ogImage="/assets/og.jpg"
 >
   <Nav t={es} site={site} lang="es" />
@@ -23,32 +27,47 @@ const allowed = key && key === import.meta.env.PUBLIC_OWNER_KEY;
       Esta página es para que el dueño del negocio suba fotos/videos nuevos a la galería del sitio.
     </p>
 
-    {allowed ? (
-      <div class="mt-6 card">
-        <p class="text-sm text-slate-700">
-          Abra el formulario abajo. (Todavía necesitará la contraseña de Tally.)
-        </p>
+    <div class="mt-6 card">
+      <p class="text-sm text-slate-700">
+        Abra el formulario abajo. (Todavía necesitará la contraseña de Tally.)
+      </p>
 
-        <div class="mt-4 overflow-hidden rounded-2xl ring-1 ring-slate-200/60 bg-white">
-          <iframe
-            title="Formulario de Subida RLC"
-            src={site.tallyFormUrlEs}
-            loading="lazy"
-            class="w-full"
-            style="height: 78vh;"
-            referrerpolicy="no-referrer"
-          ></iframe>
-        </div>
+      <div class="mt-4 overflow-hidden rounded-2xl ring-1 ring-slate-200/60 bg-white">
+        <iframe
+          title="Formulario de Subida RLC"
+          src={site.tallyFormUrlEs}
+          loading="lazy"
+          class="w-full"
+          style="height: 78vh;"
+          referrerpolicy="no-referrer"
+        ></iframe>
       </div>
-    ) : (
-      <div class="mt-6 rounded-2xl bg-white p-5 ring-1 ring-slate-200/60">
-        <p class="text-sm font-semibold text-slate-800">
-          Acceso denegado.
-        </p>
-        <p class="mt-1 text-sm text-slate-600">
-          Use su enlace privado de dueño.
-        </p>
-      </div>
-    )}
+    </div>
   </main>
+
+  <!-- ✅ Hard gate: requires Owner Portal unlock (7-day device access) -->
+  <script is:inline>
+    {`
+      (function () {
+        const KEY = ${JSON.stringify(OWNER_UNLOCK_UNTIL_KEY)};
+        const HOME = ${JSON.stringify(homeHref)};
+
+        const now = Date.now();
+        let until = 0;
+
+        try {
+          until = Number(localStorage.getItem(KEY) || "0");
+        } catch (_) {
+          until = 0;
+        }
+
+        const ok = Number.isFinite(until) && until > now;
+
+        if (!ok) {
+          // Redirect immediately to /es/ if not unlocked
+          window.location.replace(HOME);
+        }
+      })();
+    `}
+  </script>
 </BaseLayout>

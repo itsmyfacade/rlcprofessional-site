@@ -9,25 +9,60 @@ const phoneTel = site.phoneTel;
 const phoneDisplay = site.phoneDisplay;
 
 const langHref = lang === "en" ? "/es/" : "/";
-
-// For consistent “home” href in both langs
 const homeHref = lang === "en" ? "/" : "/es/";
 
 // i18n-safe labels
 const menuLabel = t?.nav?.menu ?? (lang === "es" ? "Abrir menú" : "Open menu");
 
-// ✅ Owner Upload gating (Step A3)
-const url = Astro.url ?? new URL(Astro.request.url);
-const key = url.searchParams.get("key") || "";
-const envKey = import.meta.env.PUBLIC_OWNER_KEY || "";
-const showOwner = Boolean(key && envKey && key === envKey);
+// ✅ Owner Portal (password-based, remembers for 7 days)
+const ownerHref = lang === "en" ? "/owner-upload" : "/es/owner-upload";
 
-const ownerHref = lang === "en"
-  ? `/owner-upload?key=${encodeURIComponent(key)}`
-  : `/es/owner-upload?key=${encodeURIComponent(key)}`;
+// Reuse your existing env key so you don't have to change Vercel env names
+const ownerPassword = import.meta.env.PUBLIC_OWNER_KEY || "";
 
-const ownerLabel =
-  t?.nav?.ownerUpload ?? (lang === "es" ? "Subida Dueño" : "Owner Upload");
+// Optional contact fallback (no placeholders, auto-derives from site if present)
+const siteEmail = (site?.email || site?.contactEmail || site?.ownerEmail || "").toString().trim();
+const supportHref = siteEmail ? `mailto:${siteEmail}` : `tel:${phoneTel}`;
+
+const ownerPortalLabel =
+  t?.nav?.ownerPortal ?? (lang === "es" ? "Portal del Dueño" : "Owner Portal");
+
+const ownerUploadLabel =
+  t?.nav?.ownerUpload ?? (lang === "es" ? "Subir Fotos" : "Upload Photos");
+
+const ownerLogoutLabel =
+  t?.nav?.ownerLogout ?? (lang === "es" ? "Cerrar sesión" : "Log out");
+
+const ownerUnlockTitle =
+  t?.nav?.ownerUnlockTitle ?? (lang === "es" ? "Acceso del Dueño" : "Owner Access");
+
+const ownerUnlockHint =
+  t?.nav?.ownerUnlockHint ??
+  (lang === "es"
+    ? "Ingrese su contraseña para abrir el formulario de subida."
+    : "Enter your password to open the upload form.");
+
+const ownerPasswordLabel =
+  t?.nav?.ownerPasswordLabel ?? (lang === "es" ? "Contraseña" : "Password");
+
+const ownerUnlockBtn =
+  t?.nav?.ownerUnlockBtn ?? (lang === "es" ? "Entrar" : "Continue");
+
+const ownerForgotLabel =
+  t?.nav?.ownerForgot ?? (lang === "es" ? "¿Olvidó la contraseña?" : "Forgot password?");
+
+const ownerContactLabel =
+  t?.nav?.ownerContact ?? (lang === "es" ? "Contactar" : "Contact");
+
+const ownerErrorLabel =
+  t?.nav?.ownerError ?? (lang === "es" ? "Contraseña incorrecta." : "Incorrect password.");
+
+const ownerCloseLabel =
+  t?.nav?.close ?? (lang === "es" ? "Cerrar" : "Close");
+
+// Storage keys
+const OWNER_UNLOCK_UNTIL_KEY = "rlc_owner_unlocked_until";
+const OWNER_UNLOCK_DAYS = 7; // remember for 7 days
 ---
 
 <header class="sticky top-0 z-50 border-b border-slate-200/60 bg-white/85 backdrop-blur supports-backdrop-filter:bg-white/70">
@@ -56,8 +91,16 @@ const ownerLabel =
       <a class="navlink" href="#quote">{t.nav.quote}</a>
       <a class="navlink" href="#contact">{t.nav.contact}</a>
 
-      <!-- ✅ Owner Upload (only shows with valid key) -->
-      {showOwner ? <a class="navlink" href={ownerHref}>{ownerLabel}</a> : null}
+      <!-- ✅ Owner Portal (opens password gate, remembers access) -->
+      <button
+        type="button"
+        class="navlink"
+        id="ownerPortalBtnDesktop"
+        aria-haspopup="dialog"
+        aria-controls="ownerGate"
+      >
+        {ownerPortalLabel}
+      </button>
 
       <!-- Language toggle -->
       <a
@@ -109,12 +152,16 @@ const ownerLabel =
         <a class="navlink block rounded-xl px-3 py-2 hover:bg-brand-50" href="#quote">{t.nav.quote}</a>
         <a class="navlink block rounded-xl px-3 py-2 hover:bg-brand-50" href="#contact">{t.nav.contact}</a>
 
-        <!-- ✅ Owner Upload (only shows with valid key) -->
-        {showOwner ? (
-          <a class="navlink block rounded-xl px-3 py-2 hover:bg-brand-50" href={ownerHref}>
-            {ownerLabel}
-          </a>
-        ) : null}
+        <!-- ✅ Owner Portal (mobile) -->
+        <button
+          type="button"
+          class="navlink block w-full rounded-xl px-3 py-2 text-left hover:bg-brand-50"
+          id="ownerPortalBtnMobile"
+          aria-haspopup="dialog"
+          aria-controls="ownerGate"
+        >
+          {ownerPortalLabel}
+        </button>
       </div>
 
       <div class="mt-4 flex flex-col gap-2">
@@ -124,6 +171,82 @@ const ownerLabel =
         <a class="btn btn-outline w-full" href={langHref} aria-label="Toggle language">
           {t.nav.toggle}
         </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ Owner Gate Modal -->
+  <div
+    id="ownerGate"
+    class="fixed inset-0 z-60 hidden"
+    aria-hidden="true"
+  >
+    <div class="absolute inset-0 bg-black/35 backdrop-blur-sm"></div>
+
+    <div class="absolute inset-0 flex items-center justify-center p-4">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="ownerGateTitle"
+        class="w-full max-w-md rounded-3xl bg-white p-5 shadow-soft ring-1 ring-slate-200/70"
+      >
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <p id="ownerGateTitle" class="text-base font-extrabold text-brand-900">{ownerUnlockTitle}</p>
+            <p class="mt-1 text-sm text-slate-600">{ownerUnlockHint}</p>
+          </div>
+
+          <button
+            type="button"
+            id="ownerGateClose"
+            class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500 focus-visible:ring-offset-2"
+            aria-label={ownerCloseLabel}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5" aria-hidden="true">
+              <path fill-rule="evenodd" d="M6.22 6.22a.75.75 0 0 1 1.06 0L12 10.94l4.72-4.72a.75.75 0 1 1 1.06 1.06L13.06 12l4.72 4.72a.75.75 0 1 1-1.06 1.06L12 13.06l-4.72 4.72a.75.75 0 1 1-1.06-1.06L10.94 12 6.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="mt-4">
+          <label for="ownerPass" class="text-xs font-bold text-slate-700">{ownerPasswordLabel}</label>
+          <input
+            id="ownerPass"
+            type="password"
+            autocomplete="current-password"
+            class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-soft ring-1 ring-black/5 outline-none focus:border-accent-500 focus:ring-2 focus:ring-accent-500/30"
+          />
+          <p id="ownerErr" class="mt-2 hidden text-sm font-semibold text-red-600">{ownerErrorLabel}</p>
+        </div>
+
+        <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div class="flex items-center gap-2">
+            <button id="ownerContinue" type="button" class="btn btn-accent w-full sm:w-auto">
+              {ownerUnlockBtn}
+            </button>
+
+            <button id="ownerLogout" type="button" class="btn btn-outline w-full sm:w-auto">
+              {ownerLogoutLabel}
+            </button>
+          </div>
+
+          <a
+            class="text-sm font-semibold text-accent-700 underline"
+            href={supportHref}
+            id="ownerForgot"
+            rel="noopener"
+          >
+            {ownerForgotLabel} <span class="no-underline">({ownerContactLabel})</span>
+          </a>
+        </div>
+
+        <div class="mt-4 rounded-2xl bg-brand-50 p-3 ring-1 ring-slate-200/60">
+          <p class="text-xs text-slate-600">
+            {lang === "es"
+              ? "Consejo: una vez que entres, el acceso queda guardado por 7 días en este dispositivo."
+              : "Tip: once you enter, access is saved for 7 days on this device."}
+          </p>
+        </div>
       </div>
     </div>
   </div>
@@ -143,35 +266,162 @@ const ownerLabel =
   </style>
 
   <script is:inline>
-    const btn = document.getElementById("menuBtn");
-    const menu = document.getElementById("mobileMenu");
+    {`
+      const OWNER_UNLOCK_UNTIL_KEY = ${JSON.stringify(OWNER_UNLOCK_UNTIL_KEY)};
+      const OWNER_UNLOCK_DAYS = ${JSON.stringify(OWNER_UNLOCK_DAYS)};
+      const OWNER_HREF = ${JSON.stringify(ownerHref)};
+      const OWNER_PASSWORD = ${JSON.stringify(ownerPassword)};
 
-    function closeMenu() {
-      if (!btn || !menu) return;
-      menu.classList.add("hidden");
-      btn.setAttribute("aria-expanded", "false");
-    }
+      const menuBtn = document.getElementById("menuBtn");
+      const mobileMenu = document.getElementById("mobileMenu");
 
-    function toggleMenu() {
-      if (!btn || !menu) return;
-      const isOpen = !menu.classList.contains("hidden");
-      if (isOpen) closeMenu();
-      else {
-        menu.classList.remove("hidden");
-        btn.setAttribute("aria-expanded", "true");
+      const ownerGate = document.getElementById("ownerGate");
+      const ownerGateClose = document.getElementById("ownerGateClose");
+      const ownerPass = document.getElementById("ownerPass");
+      const ownerErr = document.getElementById("ownerErr");
+      const ownerContinue = document.getElementById("ownerContinue");
+      const ownerLogout = document.getElementById("ownerLogout");
+      const ownerPortalBtnDesktop = document.getElementById("ownerPortalBtnDesktop");
+      const ownerPortalBtnMobile = document.getElementById("ownerPortalBtnMobile");
+
+      function closeMobileMenu() {
+        if (!menuBtn || !mobileMenu) return;
+        mobileMenu.classList.add("hidden");
+        menuBtn.setAttribute("aria-expanded", "false");
       }
-    }
 
-    btn?.addEventListener("click", toggleMenu);
+      function toggleMobileMenu() {
+        if (!menuBtn || !mobileMenu) return;
+        const isOpen = !mobileMenu.classList.contains("hidden");
+        if (isOpen) closeMobileMenu();
+        else {
+          mobileMenu.classList.remove("hidden");
+          menuBtn.setAttribute("aria-expanded", "true");
+        }
+      }
 
-    // Close on link click (mobile)
-    menu?.querySelectorAll("a[href^='#']").forEach((a) => {
-      a.addEventListener("click", closeMenu);
-    });
+      menuBtn?.addEventListener("click", toggleMobileMenu);
 
-    // Close on escape
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") closeMenu();
-    });
+      // Close on link click (mobile)
+      mobileMenu?.querySelectorAll("a[href^='#']").forEach((a) => {
+        a.addEventListener("click", closeMobileMenu);
+      });
+
+      function nowMs() { return Date.now(); }
+
+      function isOwnerUnlocked() {
+        try {
+          const raw = localStorage.getItem(OWNER_UNLOCK_UNTIL_KEY) || "";
+          const until = Number(raw);
+          return Number.isFinite(until) && until > nowMs();
+        } catch (_) {
+          return false;
+        }
+      }
+
+      function setOwnerUnlocked(days) {
+        try {
+          const ms = days * 24 * 60 * 60 * 1000;
+          localStorage.setItem(OWNER_UNLOCK_UNTIL_KEY, String(nowMs() + ms));
+        } catch (_) {}
+      }
+
+      function clearOwnerUnlocked() {
+        try { localStorage.removeItem(OWNER_UNLOCK_UNTIL_KEY); } catch (_) {}
+      }
+
+      function openOwnerGate() {
+        if (!ownerGate) return;
+
+        // If already unlocked, go straight in
+        if (isOwnerUnlocked()) {
+          closeMobileMenu();
+          window.location.href = OWNER_HREF;
+          return;
+        }
+
+        ownerGate.classList.remove("hidden");
+        ownerGate.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+
+        if (ownerErr) ownerErr.classList.add("hidden");
+        if (ownerPass) {
+          ownerPass.value = "";
+          setTimeout(() => ownerPass.focus(), 60);
+        }
+      }
+
+      function closeOwnerGate() {
+        if (!ownerGate) return;
+        ownerGate.classList.add("hidden");
+        ownerGate.setAttribute("aria-hidden", "true");
+        document.body.style.overflow = "";
+        if (ownerErr) ownerErr.classList.add("hidden");
+      }
+
+      function submitOwnerPass() {
+        if (!ownerPass || !ownerErr) return;
+
+        // If env is missing, do not allow (prevents accidental open)
+        if (!OWNER_PASSWORD) {
+          ownerErr.textContent = ${JSON.stringify(lang === "es"
+            ? "Acceso no disponible. Falta configuración."
+            : "Access unavailable. Missing configuration.")};
+          ownerErr.classList.remove("hidden");
+          return;
+        }
+
+        const entered = (ownerPass.value || "").trim();
+        const ok = entered && entered === OWNER_PASSWORD;
+
+        if (!ok) {
+          ownerErr.classList.remove("hidden");
+          ownerPass.focus();
+          ownerPass.select?.();
+          return;
+        }
+
+        setOwnerUnlocked(OWNER_UNLOCK_DAYS);
+        closeOwnerGate();
+        closeMobileMenu();
+        window.location.href = OWNER_HREF;
+      }
+
+      function doOwnerLogout() {
+        clearOwnerUnlocked();
+        closeOwnerGate();
+      }
+
+      // Open gate from nav
+      ownerPortalBtnDesktop?.addEventListener("click", openOwnerGate);
+      ownerPortalBtnMobile?.addEventListener("click", () => {
+        closeMobileMenu();
+        openOwnerGate();
+      });
+
+      ownerGateClose?.addEventListener("click", closeOwnerGate);
+      ownerContinue?.addEventListener("click", submitOwnerPass);
+      ownerLogout?.addEventListener("click", doOwnerLogout);
+
+      // Click outside closes modal
+      ownerGate?.addEventListener("click", (e) => {
+        if (e.target === ownerGate) closeOwnerGate();
+      });
+
+      // Enter submits
+      ownerPass?.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") submitOwnerPass();
+        if (e.key === "Escape") closeOwnerGate();
+      });
+
+      // Esc closes (global)
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          // If modal open, close it; else close mobile menu
+          if (ownerGate && !ownerGate.classList.contains("hidden")) closeOwnerGate();
+          else closeMobileMenu();
+        }
+      });
+    `}
   </script>
 </header>
