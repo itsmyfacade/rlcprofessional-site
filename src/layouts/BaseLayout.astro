@@ -16,15 +16,40 @@ const baseUrl = canonical ? canonical.split("/").slice(0, 3).join("/") : "";
 const altEn = baseUrl ? `${baseUrl}/` : "";
 const altEs = baseUrl ? `${baseUrl}/es/` : "";
 const isEs = lang === "es";
----
 
+/**
+ * ✅ Title translation: default English, Spanish when /es/
+ * If a page passes a custom title, we translate only the common known one.
+ * Otherwise we keep the original (safe, won't break custom pages).
+ */
+function localizedTitle(input: string) {
+  const s = (input ?? "").trim();
+  if (!s) return s;
+
+  // Exact match for your current default/home title
+  if (s === "Painters in Kissimmee | RLC Professional") {
+    return isEs ? "Pintores en Kissimmee | RLC Professional" : s;
+  }
+
+  // If you later switch to Haines City (recommended), this will still work
+  if (s === "Painters in Haines City | RLC Professional") {
+    return isEs ? "Pintores en Haines City | RLC Professional" : s;
+  }
+
+  // Otherwise: don't guess (prevents breaking SEO titles on other pages)
+  return s;
+}
+
+const pageTitle = localizedTitle(title);
+const ogTitle = pageTitle;
+---
 <!doctype html>
 <html lang={lang}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 
-    <title>{title}</title>
+    <title>{pageTitle}</title>
     <meta name="description" content={description} />
     <meta name="robots" content="index,follow" />
     <link rel="canonical" href={canonical} />
@@ -36,7 +61,7 @@ const isEs = lang === "es";
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content={title} />
+    <meta property="og:title" content={ogTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={ogImage} />
@@ -48,10 +73,13 @@ const isEs = lang === "es";
 
     <!-- Browser theming -->
     <meta name="color-scheme" content="light dark" />
-    <meta name="theme-color" content={isEs ? "#1A2B3C" : "#1A2B3C"} />
+    <meta name="theme-color" content="#1A2B3C" />
 
-    <!-- Icons -->
-    <link rel="icon" href="/favicon.svg" />
+    <!-- ✅ Favicons (Astro public/ is served from /) -->
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
 
     <!-- Perf hints (safe) -->
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
