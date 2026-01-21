@@ -22,6 +22,38 @@
 		{
 			"src": "^/api/drive-video/([^/]+?)/?$",
 			"dest": "_render"
+		},
+		{
+			"src": "^/es/privacy/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/es/terms/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/es/thanks/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/es/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/privacy/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/terms/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/thanks/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/$",
+			"dest": "_render"
 		}
 	]
 }

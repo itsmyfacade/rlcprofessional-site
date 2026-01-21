@@ -12,6 +12,9 @@ const langHref = lang === "en" ? "/es/" : "/";
 
 // For consistent “home” href in both langs
 const homeHref = lang === "en" ? "/" : "/es/";
+
+// i18n-safe labels
+const menuLabel = t?.nav?.menu ?? (lang === "es" ? "Abrir menú" : "Open menu");
 ---
 
 <header class="sticky top-0 z-50 border-b border-slate-200/60 bg-white/85 backdrop-blur supports-backdrop-filter:bg-white/70">
@@ -25,9 +28,9 @@ const homeHref = lang === "en" ? "/" : "/es/";
         decoding="async"
       />
 
-      <!-- ✅ Show brand on mobile (truncate so it never disappears) -->
+      <!-- ✅ Brand now clamps to 2 lines on mobile (no disappearing / no ugly overflow) -->
       <div class="min-w-0">
-        <p class="block max-w-42 truncate text-sm font-semibold text-brand-900 sm:max-w-none">
+        <p class="brand-clamp text-[13px] font-semibold leading-tight text-brand-900 sm:text-sm sm:leading-normal">
           {site.brandName}
         </p>
         <p class="hidden sm:block text-xs text-slate-600">Haines City • Kissimmee • Davenport</p>
@@ -40,7 +43,7 @@ const homeHref = lang === "en" ? "/" : "/es/";
       <a class="navlink" href="#quote">{t.nav.quote}</a>
       <a class="navlink" href="#contact">{t.nav.contact}</a>
 
-      <!-- Language toggle (segmented feel) -->
+      <!-- Language toggle -->
       <a
         class="btn btn-outline px-4"
         href={langHref}
@@ -71,7 +74,7 @@ const homeHref = lang === "en" ? "/" : "/es/";
         id="menuBtn"
         type="button"
         class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200/70 bg-white/90 text-brand-900 shadow-soft ring-1 ring-black/5 transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500 focus-visible:ring-offset-2"
-        aria-label="Open menu"
+        aria-label={menuLabel}
         aria-expanded="false"
         aria-controls="mobileMenu"
       >
@@ -101,6 +104,20 @@ const homeHref = lang === "en" ? "/" : "/es/";
       </div>
     </div>
   </div>
+
+  <style>
+    /* ✅ No Tailwind plugin needed: clean 2-line clamp for brand name on mobile */
+    .brand-clamp {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      overflow: hidden;
+      max-width: 10.5rem; /* keeps header stable on small screens */
+    }
+    @media (min-width: 640px) {
+      .brand-clamp { max-width: none; }
+    }
+  </style>
 
   <script is:inline>
     const btn = document.getElementById("menuBtn");

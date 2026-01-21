@@ -4,9 +4,40 @@
 @layer base {
   html {
     text-rendering: optimizeLegibility;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip; /* prevents mobile horizontal overflow */
   }
+
   body {
     @apply bg-brand-50 text-slate-900 antialiased;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  /* Fallback for older browsers */
+  @supports not (overflow-x: clip) {
+    html,
+    body {
+      overflow-x: hidden;
+    }
+  }
+
+  /* Prevent common overflow offenders (videos/iframes/images/svg) */
+  img,
+  video,
+  iframe,
+  canvas,
+  svg {
+    max-width: 100%;
+  }
+
+  /* Flex/grid children can overflow without this */
+  *,
+  *::before,
+  *::after {
+    min-width: 0;
   }
 }
 

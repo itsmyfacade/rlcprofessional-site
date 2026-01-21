@@ -32,6 +32,12 @@
     "addressLine": "Haines City, FL 33844"
   },
   "services": {
+    "pill": {
+      "concrete": "Concrete",
+      "pressureWashing": "Pressure Washing",
+      "sealing": "Sealing",
+      "bestValue": "Best Value"
+    },
     "title": "Services",
     "subtitle": "Professional exterior solutions built for Florida conditions.",
     "cards": [
