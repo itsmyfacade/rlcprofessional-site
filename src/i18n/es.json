@@ -55,7 +55,10 @@
         "title": "Lavado a Presion y Sellado",
         "desc": "Limpieza profunda y sellado protector para mantener el concreto como nuevo."
       }
-    ]
+    ],
+    "photosSupported": "Se aceptan fotos",
+    "bestValue": "Mejor valor",
+    "bundleLabel": "Concreto + Lavado a Presión + Sellado"
   },
   "quote": {
     "title": "Solicitar Cotizacion Gratis",

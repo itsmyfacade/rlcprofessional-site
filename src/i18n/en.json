@@ -55,7 +55,10 @@
         "title": "Pressure Washing & Sealing",
         "desc": "Deep cleaning and protective sealing for concrete surfaces to keep them looking new."
       }
-    ]
+    ],
+    "photosSupported": "Photos supported",
+    "bestValue": "Best Value",
+    "bundleLabel": "Concrete + Pressure Washing + Sealing"
   },
   "quote": {
     "title": "Get a Free Quote",

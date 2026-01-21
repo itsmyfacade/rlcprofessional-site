@@ -16,17 +16,21 @@ const homeHref = lang === "en" ? "/" : "/es/";
 
 <header class="sticky top-0 z-50 border-b border-slate-200/60 bg-white/85 backdrop-blur supports-backdrop-filter:bg-white/70">
   <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-    <a href={homeHref} class="flex items-center gap-3">
+    <a href={homeHref} class="flex items-center gap-3 min-w-0">
       <img
         src={site.assets.logo}
         alt={site.brandName}
-        class="h-10 w-auto"
+        class="h-10 w-auto shrink-0"
         loading="eager"
         decoding="async"
       />
-      <div class="hidden sm:block">
-        <p class="text-sm font-semibold text-brand-900">{site.brandName}</p>
-        <p class="text-xs text-slate-600">Haines City • Kissimmee • Davenport</p>
+
+      <!-- ✅ Show brand on mobile (truncate so it never disappears) -->
+      <div class="min-w-0">
+        <p class="block max-w-[10.5rem] truncate text-sm font-semibold text-brand-900 sm:max-w-none">
+          {site.brandName}
+        </p>
+        <p class="hidden sm:block text-xs text-slate-600">Haines City • Kissimmee • Davenport</p>
       </div>
     </a>
 
@@ -53,7 +57,7 @@ const homeHref = lang === "en" ? "/" : "/es/";
     </nav>
 
     <!-- Mobile -->
-    <div class="flex items-center gap-2 md:hidden">
+    <div class="flex items-center gap-2 md:hidden shrink-0">
       <a class="btn btn-outline px-3" href={langHref} aria-label="Toggle language" title={t.nav.toggle}>
         {t.nav.toggle}
       </a>

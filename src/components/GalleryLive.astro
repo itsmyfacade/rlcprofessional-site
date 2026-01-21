@@ -44,6 +44,88 @@ const ui = {
   loading: gallery.loading ?? (lang === "es" ? "Cargando…" : "Loading…"),
 };
 
+function normalizeServiceLabel(s?: string) {
+  const raw = (s ?? "").trim().toLowerCase();
+  if (!raw) return "";
+  // normalize accents + spacing + common punctuation
+  const noAccents = raw.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return noAccents
+    .replace(/[’']/g, "")
+    .replace(/\s+/g, " ")
+    .replace(/\s*&\s*/g, " & ")
+    .replace(/\s*\+\s*/g, " + ")
+    .trim();
+}
+
+type ServiceKey =
+  | "interior_painting"
+  | "exterior_painting"
+  | "concrete_install_repair"
+  | "curbs_concrete_edging"
+  | "pressure_washing"
+  | "pressure_washing_sealing"
+  | "roof_leak_repair"
+  | "other";
+
+const SERVICE_LABELS: Record<ServiceKey, { en: string; es: string }> = {
+  interior_painting: { en: "Interior Painting", es: "Pintura Interior" },
+  exterior_painting: { en: "Exterior Painting", es: "Pintura Exterior" },
+  concrete_install_repair: { en: "Concrete Installation & Repair", es: "Instalación y Reparación de Concreto" },
+  curbs_concrete_edging: { en: "Curbs & Concrete Edging", es: "Bordillos y Bordes de Concreto" },
+  pressure_washing: { en: "Pressure Washing", es: "Lavado a Presión" },
+  pressure_washing_sealing: { en: "Pressure Washing & Sealing", es: "Lavado a Presión y Sellado" },
+  roof_leak_repair: { en: "Roof Leak Repair", es: "Reparación de Filtraciones en el Techo" },
+  other: { en: "Other", es: "Otro" },
+};
+
+function detectServiceKey(serviceType: string): ServiceKey | null {
+  const s = normalizeServiceLabel(serviceType);
+  if (!s) return null;
+
+  // ✅ Exact dropdown matches (EN)
+  if (s === "interior painting") return "interior_painting";
+  if (s === "exterior painting") return "exterior_painting";
+  if (s === "concrete installation & repair" || s === "concrete installation and repair") return "concrete_install_repair";
+  if (s === "curbs & concrete edging" || s === "curbs and concrete edging") return "curbs_concrete_edging";
+  if (s === "pressure washing") return "pressure_washing";
+  if (s === "pressure washing & sealing" || s === "pressure washing and sealing") return "pressure_washing_sealing";
+  if (s === "roof leak repair") return "roof_leak_repair";
+  if (s === "other") return "other";
+
+  // ✅ Exact dropdown matches (ES) — with/without accents already handled by normalize
+  if (s === "pintura interior") return "interior_painting";
+  if (s === "pintura exterior") return "exterior_painting";
+  if (s === "instalacion y reparacion de concreto") return "concrete_install_repair";
+  if (s === "bordillos y bordes de concreto") return "curbs_concrete_edging";
+  if (s === "lavado a presion") return "pressure_washing";
+  if (s === "lavado a presion y sellado") return "pressure_washing_sealing";
+  if (s === "reparacion de filtraciones en el techo") return "roof_leak_repair";
+  if (s === "otro") return "other";
+
+  // ✅ Smart fallback (client typed a variation)
+  const hasPressure = s.includes("pressure washing") || s.includes("lavado a presion") || s.includes("lavado a presion");
+  const hasSeal = s.includes("sealing") || s.includes("sellado");
+  const hasRoof = s.includes("roof") || s.includes("techo") || s.includes("filtracion") || s.includes("goter");
+
+  if (hasRoof) return "roof_leak_repair";
+  if (hasPressure && hasSeal) return "pressure_washing_sealing";
+  if (hasPressure) return "pressure_washing";
+  if (s.includes("interior") || s.includes("pintura interior")) return "interior_painting";
+  if (s.includes("exterior") || s.includes("pintura exterior")) return "exterior_painting";
+  if (s.includes("concrete") || s.includes("concreto")) return "concrete_install_repair";
+  if (s.includes("curb") || s.includes("bordill") || s.includes("borde")) return "curbs_concrete_edging";
+
+  return null;
+}
+
+function translateService(serviceType: string | undefined | null, lang: "en" | "es") {
+  const raw = (serviceType ?? "").trim();
+  if (!raw) return "";
+  const key = detectServiceKey(raw);
+  if (!key) return raw; // unknown/custom -> show what client typed
+  return lang === "es" ? SERVICE_LABELS[key].es : SERVICE_LABELS[key].en;
+}
+
 function hasAnyMedia(it: GalleryItem) {
   return Boolean(
     it.beforeUrl ||
@@ -90,17 +172,14 @@ function driveId(u: string) {
   return null;
 }
 
-/**
- * ✅ OPTION A: Client can paste ANY Drive link (or just the ID) and we auto-convert
- * to Drive's /preview embed URL so it works reliably on mobile + desktop.
- */
+/** Option A: Drive /preview embed for links/IDs */
 function drivePreview(u: string) {
   const id = driveId(u);
   if (!id) return null;
   return `https://drive.google.com/file/d/${id}/preview`;
 }
 
-// Kept for backwards compatibility (if you still have old /api/drive-video entries in the sheet)
+// Backwards compatibility
 function driveProxy(u: string) {
   const id = driveId(u);
   if (!id) return null;
@@ -158,11 +237,13 @@ function normalizeVideoSrc(u?: string) {
         {items.filter(hasAnyMedia).map((it: GalleryItem) => (
           <article class="card group overflow-hidden">
             <div class="flex items-center justify-between gap-2">
-              <p class="text-xs font-extrabold text-brand-900">{it.serviceType || ui.untitled}</p>
+              <p class="text-xs font-extrabold text-brand-900">
+                {translateService(it.serviceType, lang) || ui.untitled}
+              </p>
               <p class="text-[11px] text-slate-500">{it.city}</p>
             </div>
 
-            {/* ✅ VIDEO FIRST */}
+            {/* VIDEO */}
             {it.videoUrl ? (
               <div class="mt-3 overflow-hidden rounded-2xl ring-1 ring-slate-200/60 bg-white">
                 <div class="aspect-video w-full bg-white relative overflow-hidden" data-video-box>
@@ -204,7 +285,7 @@ function normalizeVideoSrc(u?: string) {
             ) : isEmbedVideo(it) ? (
               <div class="mt-3 overflow-hidden rounded-2xl ring-1 ring-slate-200/60 bg-white">
                 <div class="aspect-video w-full bg-white relative overflow-hidden" data-video-box>
-                  {/* ✅ If it's a Drive link (or ID), always use Drive /preview embed (Option A). */}
+                  {/* Drive link/ID => /preview embed */}
                   {it.publicLink && (isDrive(it.publicLink) || looksLikeDriveId(it.publicLink)) ? (
                     <iframe
                       class="absolute inset-0 h-full w-full"
@@ -317,7 +398,6 @@ function normalizeVideoSrc(u?: string) {
       will-change: transform, opacity;
     }
 
-    /* ✅ Hard failsafe: loader cannot stay forever even if JS/video events never fire */
     @keyframes loaderFadeOut {
       to { opacity: 0; visibility: hidden; pointer-events: none; }
     }
@@ -325,13 +405,11 @@ function normalizeVideoSrc(u?: string) {
       to { opacity: 1; }
     }
 
-    /* After 2.6s, loader fades out no matter what */
     .js-video-loader-failsafe {
       animation: loaderFadeOut 200ms ease forwards;
       animation-delay: 2.6s;
     }
 
-    /* After loader fades, video fades in no matter what (poster covers if video isn't ready) */
     .js-video-failsafe {
       animation: videoFadeIn 200ms ease forwards;
       animation-delay: 2.8s;
@@ -350,7 +428,6 @@ function normalizeVideoSrc(u?: string) {
         forceMute(v);
         v.playsInline = true;
 
-        // IMPORTANT: do not spam load() (it can cause cancel/restart loops)
         if (!v.__didInitialLoad) {
           v.__didInitialLoad = true;
           try { v.load?.(); } catch (_) {}
@@ -415,35 +492,6 @@ function normalizeVideoSrc(u?: string) {
         }
       };
 
-      const attachDebug = (v) => {
-        if (!v || v.__debugAttached) return;
-        v.__debugAttached = true;
-
-        const log = (msg, extra) => console.log(\`[gallery video] \${msg}\`, extra || "");
-
-        v.addEventListener("error", () => {
-          const err = v.error;
-          log("ERROR event fired", {
-            code: err?.code,
-            message: err?.message,
-            src: v.currentSrc,
-            networkState: v.networkState,
-            readyState: v.readyState,
-          });
-        });
-
-        v.addEventListener("stalled", () => log("stalled", { src: v.currentSrc }), { passive: true });
-        v.addEventListener("abort", () => log("abort", { src: v.currentSrc }), { passive: true });
-        v.addEventListener("waiting", () => log("waiting", { src: v.currentSrc }), { passive: true });
-
-        v.addEventListener("loadedmetadata", () => log("loadedmetadata", { duration: v.duration, vw: v.videoWidth, vh: v.videoHeight }), { passive: true });
-        v.addEventListener("loadeddata", () => log("loadeddata", { readyState: v.readyState }), { passive: true });
-        v.addEventListener("canplay", () => log("canplay", { readyState: v.readyState }), { passive: true });
-        v.addEventListener("playing", () => log("playing", { currentTime: v.currentTime }), { passive: true });
-
-        try { log("canPlayType(video/mp4)", v.canPlayType("video/mp4")); } catch {}
-      };
-
       const attachRealReveal = (v) => {
         if (!v || v.__revealAttached) return;
         v.__revealAttached = true;
@@ -461,17 +509,12 @@ function normalizeVideoSrc(u?: string) {
         v.addEventListener("loadedmetadata", revealIfReal, { passive: true });
         v.addEventListener("progress", revealIfReal, { passive: true });
 
-        // ✅ HARD UX FIX: never allow infinite loader — reveal after 2.5s no matter what
         setTimeout(() => {
           if (!v.__forcedRevealDone) {
             v.__forcedRevealDone = true;
             hideLoader(v);
           }
         }, 2500);
-
-        if (typeof v.requestVideoFrameCallback === "function") {
-          try { v.requestVideoFrameCallback(() => revealIfReal()); } catch (_) {}
-        }
 
         v.addEventListener("error", () => showFail(v), { passive: true });
 
@@ -486,7 +529,6 @@ function normalizeVideoSrc(u?: string) {
       const boot = () => {
         document.querySelectorAll("video.js-autoplay-video").forEach((v) => {
           forceMute(v);
-          attachDebug(v);
           attachRealReveal(v);
           hardLoop(v);
           tryPlay(v);
