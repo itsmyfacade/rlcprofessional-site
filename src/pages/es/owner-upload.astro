@@ -35,19 +35,19 @@ const canonical = Astro.url.href;
       <div class="mt-4 overflow-hidden rounded-2xl ring-1 ring-slate-200/60 bg-white">
         <iframe
           title="Formulario de Subida RLC"
-          src={site.tallyFormUrlEs}
+          src={site.tallyBeforeAfterUrlEs}
           loading="lazy"
           class="w-full"
           style="height: 78vh;"
-          referrerpolicy="no-referrer"
-        ></iframe>
+          referrerpolicy="no-referrer"></iframe>
       </div>
     </div>
   </main>
 
   <!-- ✅ Hard gate: requires Owner Portal unlock (7-day device access) -->
   <script is:inline>
-    {`
+    {
+      `
       (function () {
         const KEY = ${JSON.stringify(OWNER_UNLOCK_UNTIL_KEY)};
         const HOME = ${JSON.stringify(homeHref)};
@@ -68,6 +68,7 @@ const canonical = Astro.url.href;
           window.location.replace(HOME);
         }
       })();
-    `}
+    `;
+    }
   </script>
 </BaseLayout>
