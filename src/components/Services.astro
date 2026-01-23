@@ -31,13 +31,6 @@ function iconFor(title: string) {
   return "default";
 }
 
-const bundle = {
-  concrete: lang === "es" ? "Concreto" : "Concrete",
-  pressureWashing: lang === "es" ? "Lavado a Presión" : "Pressure Washing",
-  sealing: lang === "es" ? "Sellado" : "Sealing",
-  bestValue: lang === "es" ? "Mejor Valor" : "Best Value",
-};
-
 // Defensive fallback so this never renders undefined
 const photosSupportedText =
   t?.services?.photosSupported ??
@@ -46,10 +39,10 @@ const photosSupportedText =
 
 <section id="services" class="border-t border-slate-200/60 bg-white">
   <div class="mx-auto max-w-6xl px-4 py-12">
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div class="max-w-2xl">
         <h2 class="text-2xl font-extrabold text-brand-900">{t.services.title}</h2>
-        <p class="mt-1 text-slate-700">{t.services.subtitle}</p>
+        <p class="mt-2 text-slate-700">{t.services.subtitle}</p>
 
         <div class="mt-4 inline-flex flex-wrap items-center gap-2 rounded-2xl bg-brand-50 px-3 py-2 ring-1 ring-slate-200/60">
           <span class="text-xs font-extrabold text-brand-900">{t.services.pill.concrete}</span>
@@ -57,95 +50,122 @@ const photosSupportedText =
           <span class="text-xs font-extrabold text-brand-900">{t.services.pill.pressureWashing}</span>
           <span class="text-xs text-slate-600">+</span>
           <span class="text-xs font-extrabold text-brand-900">{t.services.pill.sealing}</span>
-          <span class="ml-2 rounded-full bg-accent-500 px-2 py-1 text-[10px] font-bold text-white">{t.services.pill.bestValue}</span>
+          <span class="ml-1 rounded-full bg-accent-500 px-2 py-1 text-[10px] font-bold text-white shadow-soft">
+            {t.services.pill.bestValue}
+          </span>
         </div>
       </div>
 
-      <a href="#quote" class="btn btn-accent w-fit">{t.nav.quote}</a>
+      <a href="#quote" class="btn btn-accent w-full sm:w-fit py-3">{t.nav.quote}</a>
     </div>
 
     <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {cards.map((c) => {
+      {cards.map((c, idx) => {
         const icon = iconFor(c.title);
         const featured = isFeatured(c.title);
 
         return (
           <article
-            class={`card group relative overflow-hidden ${featured ? "ring-2 ring-accent-200" : ""}`}
+            class={`rlc-reveal group relative overflow-hidden rounded-3xl bg-white p-5 shadow-soft ring-1 ring-slate-200/60 transition hover:-translate-y-0.5 hover:shadow-md ${
+              featured ? "ring-2 ring-accent-200" : ""
+            }`}
+            style={`transition-delay: ${Math.min(idx * 70, 350)}ms;`}
           >
+            {/* Full-card clickable overlay (improves conversions) */}
+            <a
+              href="#quote"
+              aria-label={`${t.nav.quote}: ${c.title}`}
+              class="absolute inset-0 z-10 rounded-3xl"
+            ></a>
+
             {/* Soft hover glow */}
             <div
-              class="pointer-events-none absolute inset-0 opacity-0 transition group-hover:opacity-100"
+              class={`pointer-events-none absolute inset-0 -z-10 opacity-0 transition group-hover:opacity-100 ${
+                featured ? "opacity-100" : ""
+              }`}
               aria-hidden="true"
-              style="background: radial-gradient(600px circle at 20% 10%, rgba(230,126,34,0.12), transparent 55%);"
+              style="background: radial-gradient(700px circle at 18% 8%, rgba(230,126,34,0.14), transparent 58%);"
             ></div>
 
+            {/* Featured badge */}
             {featured ? (
-              <span class="absolute right-3 top-3 rounded-full bg-accent-500 px-2 py-1 text-[10px] font-bold text-white shadow-soft">
+              <span class="pointer-events-none absolute right-3 top-3 rounded-full bg-accent-500 px-2 py-1 text-[10px] font-bold text-white shadow-soft">
                 {lang === "es" ? "Popular" : "Popular"}
               </span>
             ) : null}
 
-            {/* Icon + Title */}
-            <div class="flex items-start gap-3">
-              <div class="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-50 ring-1 ring-slate-200/60 transition group-hover:bg-white">
-                {icon === "paint" ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5 text-brand-900" aria-hidden="true">
-                    <path d="M7.5 2.25A2.25 2.25 0 0 0 5.25 4.5v3.879a3 3 0 0 0 .879 2.121l6.75 6.75a2.25 2.25 0 0 0 3.182 0l2.94-2.94a2.25 2.25 0 0 0 0-3.182l-6.75-6.75A3 3 0 0 0 12.12 3.75H7.5Z"/>
-                    <path d="M3.75 15.75a.75.75 0 0 1 .75-.75h4.19a.75.75 0 0 1 .53.22l2.56 2.56a.75.75 0 0 1-.53 1.28H4.5a.75.75 0 0 1-.75-.75v-2.56Z"/>
-                  </svg>
-                ) : icon === "wash" ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5 text-brand-900" aria-hidden="true">
-                    <path fill-rule="evenodd" d="M12 2.25a.75.75 0 0 1 .75.75v3.19l2.47-1.43a.75.75 0 1 1 .75 1.299L12.75 7.5v2.08l3.53-2.04a.75.75 0 1 1 .75 1.299L12.75 11.1v2.04l2.47-1.43a.75.75 0 1 1 .75 1.299L12.75 14.4V18a.75.75 0 0 1-1.5 0v-3.6l-3.22-1.86a.75.75 0 0 1 .75-1.299l2.47 1.43V11.1L6.97 8.84a.75.75 0 1 1 .75-1.299l3.53 2.04V7.5L8.03 5.26a.75.75 0 0 1 .75-1.299l2.47 1.43V3a.75.75 0 0 1 .75-.75Z" clip-rule="evenodd"/>
-                    <path d="M7.5 19.5a4.5 4.5 0 0 1 9 0v.75a.75.75 0 0 1-.75.75h-7.5a.75.75 0 0 1-.75-.75v-.75Z"/>
-                  </svg>
-                ) : icon === "concrete" ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5 text-brand-900" aria-hidden="true">
-                    <path d="M5.25 3A2.25 2.25 0 0 0 3 5.25v13.5A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V5.25A2.25 2.25 0 0 0 18.75 3H5.25Z"/>
-                    <path d="M7 7.75a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5A.75.75 0 0 1 7 7.75ZM7 12a.75.75 0 0 1 .75-.75H12a.75.75 0 0 1 0 1.5H7.75A.75.75 0 0 1 7 12Zm6.25 4.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"/>
-                  </svg>
-                ) : icon === "roof" ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5 text-brand-900" aria-hidden="true">
-                    <path d="M12 3.172a3 3 0 0 1 1.707.534l6.293 4.364A2.25 2.25 0 0 1 21 10.02V19.5A2.25 2.25 0 0 1 18.75 21H5.25A2.25 2.25 0 0 1 3 18.75v-8.73A2.25 2.25 0 0 1 3.999 8.07l6.294-4.364A3 3 0 0 1 12 3.172Z"/>
-                    <path d="M9.75 21v-6a2.25 2.25 0 0 1 4.5 0v6h-4.5Z"/>
-                  </svg>
-                ) : icon === "cabinet" ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5 text-brand-900" aria-hidden="true">
-                    <path d="M4.5 3.75A2.25 2.25 0 0 0 2.25 6v12A2.25 2.25 0 0 0 4.5 20.25h15A2.25 2.25 0 0 0 21.75 18V6A2.25 2.25 0 0 0 19.5 3.75h-15Z"/>
-                    <path d="M8.25 7.5a.75.75 0 0 1 .75-.75h.75a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75Zm6 0a.75.75 0 0 1 .75-.75h.75a.75.75 0 0 1 0 1.5H15a.75.75 0 0 1-.75-.75Z"/>
-                    <path d="M12 3.75v16.5" />
-                  </svg>
-                ) : icon === "deck" ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5 text-brand-900" aria-hidden="true">
-                    <path d="M3 6.75A2.25 2.25 0 0 1 5.25 4.5h13.5A2.25 2.25 0 0 1 21 6.75v10.5A2.25 2.25 0 0 1 18.75 19.5H5.25A2.25 2.25 0 0 1 3 17.25V6.75Z"/>
-                    <path d="M7.5 7.5h9M7.5 10.5h9M7.5 13.5h9M7.5 16.5h9"/>
-                  </svg>
-                ) : icon === "estimate" ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5 text-brand-900" aria-hidden="true">
-                    <path d="M6.75 2.25A2.25 2.25 0 0 0 4.5 4.5v15A2.25 2.25 0 0 0 6.75 21.75h10.5A2.25 2.25 0 0 0 19.5 19.5v-9.879a2.25 2.25 0 0 0-.879-1.79l-3.75-2.92A2.25 2.25 0 0 0 13.5 4.5H6.75Z"/>
-                    <path d="M8.25 12h7.5M8.25 15h7.5M8.25 18h4.5"/>
-                  </svg>
-                ) : (
-                  <span class="text-sm font-extrabold text-brand-900">R</span>
-                )}
+            <div class="relative z-20 flex h-full flex-col">
+              {/* Icon + Title */}
+              <div class="flex items-start gap-3">
+                <div
+                  class={`mt-0.5 inline-flex h-11 w-11 items-center justify-center rounded-2xl ring-1 ring-slate-200/60 transition ${
+                    featured ? "bg-white" : "bg-brand-50 group-hover:bg-white"
+                  }`}
+                >
+                  {icon === "paint" ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5 text-brand-900" aria-hidden="true">
+                      <path d="M7.5 2.25A2.25 2.25 0 0 0 5.25 4.5v3.879a3 3 0 0 0 .879 2.121l6.75 6.75a2.25 2.25 0 0 0 3.182 0l2.94-2.94a2.25 2.25 0 0 0 0-3.182l-6.75-6.75A3 3 0 0 0 12.12 3.75H7.5Z"/>
+                      <path d="M3.75 15.75a.75.75 0 0 1 .75-.75h4.19a.75.75 0 0 1 .53.22l2.56 2.56a.75.75 0 0 1-.53 1.28H4.5a.75.75 0 0 1-.75-.75v-2.56Z"/>
+                    </svg>
+                  ) : icon === "wash" ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5 text-brand-900" aria-hidden="true">
+                      <path fill-rule="evenodd" d="M12 2.25a.75.75 0 0 1 .75.75v3.19l2.47-1.43a.75.75 0 1 1 .75 1.299L12.75 7.5v2.08l3.53-2.04a.75.75 0 1 1 .75 1.299L12.75 11.1v2.04l2.47-1.43a.75.75 0 1 1 .75 1.299L12.75 14.4V18a.75.75 0 0 1-1.5 0v-3.6l-3.22-1.86a.75.75 0 0 1 .75-1.299l2.47 1.43V11.1L6.97 8.84a.75.75 0 1 1 .75-1.299l3.53 2.04V7.5L8.03 5.26a.75.75 0 0 1 .75-1.299l2.47 1.43V3a.75.75 0 0 1 .75-.75Z" clip-rule="evenodd"/>
+                      <path d="M7.5 19.5a4.5 4.5 0 0 1 9 0v.75a.75.75 0 0 1-.75.75h-7.5a.75.75 0 0 1-.75-.75v-.75Z"/>
+                    </svg>
+                  ) : icon === "concrete" ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5 text-brand-900" aria-hidden="true">
+                      <path d="M5.25 3A2.25 2.25 0 0 0 3 5.25v13.5A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V5.25A2.25 2.25 0 0 0 18.75 3H5.25Z"/>
+                      <path d="M7 7.75a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5A.75.75 0 0 1 7 7.75ZM7 12a.75.75 0 0 1 .75-.75H12a.75.75 0 0 1 0 1.5H7.75A.75.75 0 0 1 7 12Zm6.25 4.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"/>
+                    </svg>
+                  ) : icon === "roof" ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5 text-brand-900" aria-hidden="true">
+                      <path d="M12 3.172a3 3 0 0 1 1.707.534l6.293 4.364A2.25 2.25 0 0 1 21 10.02V19.5A2.25 2.25 0 0 1 18.75 21H5.25A2.25 2.25 0 0 1 3 18.75v-8.73A2.25 2.25 0 0 1 3.999 8.07l6.294-4.364A3 3 0 0 1 12 3.172Z"/>
+                      <path d="M9.75 21v-6a2.25 2.25 0 0 1 4.5 0v6h-4.5Z"/>
+                    </svg>
+                  ) : icon === "cabinet" ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5 text-brand-900" aria-hidden="true">
+                      <path d="M4.5 3.75A2.25 2.25 0 0 0 2.25 6v12A2.25 2.25 0 0 0 4.5 20.25h15A2.25 2.25 0 0 0 21.75 18V6A2.25 2.25 0 0 0 19.5 3.75h-15Z"/>
+                      <path d="M8.25 7.5a.75.75 0 0 1 .75-.75h.75a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75Zm6 0a.75.75 0 0 1 .75-.75h.75a.75.75 0 0 1 0 1.5H15a.75.75 0 0 1-.75-.75Z"/>
+                      <path d="M12 3.75v16.5" />
+                    </svg>
+                  ) : icon === "deck" ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5 text-brand-900" aria-hidden="true">
+                      <path d="M3 6.75A2.25 2.25 0 0 1 5.25 4.5h13.5A2.25 2.25 0 0 1 21 6.75v10.5A2.25 2.25 0 0 1 18.75 19.5H5.25A2.25 2.25 0 0 1 3 17.25V6.75Z"/>
+                      <path d="M7.5 7.5h9M7.5 10.5h9M7.5 13.5h9M7.5 16.5h9"/>
+                    </svg>
+                  ) : icon === "estimate" ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5 text-brand-900" aria-hidden="true">
+                      <path d="M6.75 2.25A2.25 2.25 0 0 0 4.5 4.5v15A2.25 2.25 0 0 0 6.75 21.75h10.5A2.25 2.25 0 0 0 19.5 19.5v-9.879a2.25 2.25 0 0 0-.879-1.79l-3.75-2.92A2.25 2.25 0 0 0 13.5 4.5H6.75Z"/>
+                      <path d="M8.25 12h7.5M8.25 15h7.5M8.25 18h4.5"/>
+                    </svg>
+                  ) : (
+                    <span class="text-sm font-extrabold text-brand-900">R</span>
+                  )}
+                </div>
+
+                <div class="min-w-0">
+                  <h3 class="text-lg font-bold text-brand-900">{c.title}</h3>
+                  <p class="mt-2 text-sm leading-relaxed text-slate-700">{c.desc}</p>
+                </div>
               </div>
 
-              <div class="min-w-0">
-                <h3 class="text-lg font-bold text-brand-900">{c.title}</h3>
-                <p class="mt-2 text-sm leading-relaxed text-slate-700">{c.desc}</p>
+              <div class="mt-5 flex items-center justify-between gap-3">
+                <span class="text-sm font-extrabold text-accent-700">
+                  {t.nav.quote} →
+                </span>
+                <span class="text-xs font-semibold text-slate-600">{photosSupportedText}</span>
               </div>
-            </div>
-
-            {/* Footer CTA row */}
-            <div class="mt-5 flex items-center justify-between gap-3">
-              <a href="#quote" class="text-sm font-extrabold text-accent-700 hover:text-accent-800">
-                {t.nav.quote} →
-              </a>
-              <span class="text-xs font-semibold text-slate-600">{photosSupportedText}</span>
             </div>
           </article>
         );
       })}
     </div>
   </div>
+
+  <style>
+    /* ✅ makes stagger feel crisp and consistent */
+    @media (prefers-reduced-motion: reduce) {
+      article[style*="transition-delay"] { transition-delay: 0ms !important; }
+    }
+  </style>
 </section>

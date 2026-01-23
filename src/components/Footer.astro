@@ -18,15 +18,40 @@ const ui = {
   contact: footer.contact ?? (lang === "es" ? "Contacto" : "Contact"),
   email: footer.email ?? (lang === "es" ? "Correo" : "Email"),
   phone: footer.phone ?? (lang === "es" ? "Teléfono" : "Phone"),
-  serviceArea: footer.serviceArea ?? (lang === "es" ? "Área de servicio" : "Service Area"),
-  addressLabel: footer.addressLabel ?? (lang === "es" ? "Dirección" : "Address"),
-  rights: footer.rights ?? (lang === "es" ? "Todos los derechos reservados." : "All rights reserved."),
-  privacy: footer.privacy ?? (lang === "es" ? "Política de Privacidad" : "Privacy Policy"),
-  terms: footer.terms ?? (lang === "es" ? "Términos de Servicio" : "Terms of Service"),
+  serviceArea:
+    footer.serviceArea ?? (lang === "es" ? "Área de servicio" : "Service Area"),
+  addressLabel:
+    footer.addressLabel ?? (lang === "es" ? "Dirección" : "Address"),
+  rights:
+    footer.rights ??
+    (lang === "es" ? "Todos los derechos reservados." : "All rights reserved."),
+  privacy:
+    footer.privacy ??
+    (lang === "es" ? "Política de Privacidad" : "Privacy Policy"),
+  terms:
+    footer.terms ??
+    (lang === "es" ? "Términos de Servicio" : "Terms of Service"),
 };
+
+// ✅ Primary phone (safe)
+const phoneTel = (site?.phoneTel || "").toString().trim();
+const phoneDisplay = (site?.phoneDisplay || phoneTel).toString().trim();
+
+// ✅ Secondary phone (supports both "phoneTel2" and typo "photoTel2")
+const phoneTel2 = (site?.phoneTel2 || site?.photoTel2 || "").toString().trim();
+const phoneDisplay2 = (site?.phoneDisplay2 || phoneTel2).toString().trim();
+
+// ✅ Optional i18n-safe label for second number (no new translations required)
+const phone2Label = footer.phone2 ?? (lang === "es" ? "Teléfono 2" : "Phone 2");
+
+// ✅ Email safe
+const email = (site?.email || "").toString().trim();
 ---
 
-<footer id="contact" class="border-t border-slate-200/60 bg-brand-900 text-white">
+<footer
+  id="contact"
+  class="border-t border-slate-200/60 bg-brand-900 text-white"
+>
   <div class="mx-auto max-w-6xl px-4 py-10">
     <div class="grid gap-8 md:grid-cols-3">
       <div>
@@ -45,12 +70,38 @@ const ui = {
       <div>
         <p class="text-sm font-semibold">{ui.contact}</p>
         <ul class="mt-3 space-y-2 text-sm text-white/80">
-          <li>
-            {ui.email}: <a class="text-white underline" href={`mailto:${site.email}`}>{site.email}</a>
-          </li>
-          <li>
-            {ui.phone}: <a class="text-white underline" href={`tel:${site.phoneTel}`}>{site.phoneDisplay}</a>
-          </li>
+          {
+            email ? (
+              <li>
+                {ui.email}:{" "}
+                <a class="text-white underline" href={`mailto:${email}`}>
+                  {email}
+                </a>
+              </li>
+            ) : null
+          }
+
+          {
+            phoneTel ? (
+              <li>
+                {ui.phone}:{" "}
+                <a class="text-white underline" href={`tel:${phoneTel}`}>
+                  {phoneDisplay}
+                </a>
+              </li>
+            ) : null
+          }
+
+          {
+            phoneTel2 ? (
+              <li>
+                {phone2Label}:{" "}
+                <a class="text-white underline" href={`tel:${phoneTel2}`}>
+                  {phoneDisplay2}
+                </a>
+              </li>
+            ) : null
+          }
         </ul>
       </div>
 
@@ -65,7 +116,9 @@ const ui = {
       </div>
     </div>
 
-    <div class="mt-8 flex flex-col gap-2 border-t border-white/10 pt-6 text-xs text-white/60 sm:flex-row sm:items-center sm:justify-between">
+    <div
+      class="mt-8 flex flex-col gap-2 border-t border-white/10 pt-6 text-xs text-white/60 sm:flex-row sm:items-center sm:justify-between"
+    >
       <p>© {year} {site.brandName}. {ui.rights}</p>
       <div class="flex gap-4">
         <a class="underline" href="privacy">{ui.privacy}</a>

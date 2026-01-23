@@ -7,6 +7,8 @@
     width: 100%;
     max-width: 100%;
     overflow-x: clip; /* prevents mobile horizontal overflow */
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
@@ -14,6 +16,22 @@
     width: 100%;
     max-width: 100%;
     overflow-x: clip;
+    min-height: 100%;
+  }
+
+  /* Respect reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 1ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 1ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 
   /* Fallback for older browsers */
@@ -31,6 +49,7 @@
   canvas,
   svg {
     max-width: 100%;
+    height: auto;
   }
 
   /* Flex/grid children can overflow without this */
@@ -39,30 +58,131 @@
   *::after {
     min-width: 0;
   }
+
+  /* Better focus defaults site-wide */
+  :focus-visible {
+    outline: none;
+  }
+
+  /* Tap highlight cleanup on mobile (keeps it premium) */
+  a,
+  button {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Mobile safe-area padding helper if needed */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Smooth font rendering */
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* === Premium initial-load "paint wipe" ===
+     - Lightweight, runs once, doesn’t block interaction
+     - Add class "page-wipe" to <body> if you want to force it on
+     - Otherwise it auto-runs via :root marker class set by JS (optional)
+  */
+  @keyframes rlcPaintWipe {
+    0% {
+      transform: translateX(-8%) skewX(-10deg);
+      opacity: 1;
+      filter: blur(0px);
+    }
+    70% {
+      transform: translateX(115%) skewX(-10deg);
+      opacity: 1;
+      filter: blur(0px);
+    }
+    100% {
+      transform: translateX(140%) skewX(-10deg);
+      opacity: 0;
+      filter: blur(2px);
+    }
+  }
+
+  /* Default: show wipe once per page load */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0;
+  }
+
+  /* Runs automatically unless reduced motion */
+  @media (prefers-reduced-motion: no-preference) {
+    body::before {
+      opacity: 1;
+      background:
+        linear-gradient(
+          115deg,
+          rgba(255, 255, 255, 0) 0%,
+          rgba(255, 255, 255, 0) 28%,
+          rgba(230, 126, 34, 0.10) 36%,
+          rgba(230, 126, 34, 0.18) 46%,
+          rgba(230, 126, 34, 0.10) 56%,
+          rgba(255, 255, 255, 0) 66%,
+          rgba(255, 255, 255, 0) 100%
+        ),
+        radial-gradient(
+          1200px circle at 20% 10%,
+          rgba(26, 43, 60, 0.10),
+          rgba(255, 255, 255, 0) 55%
+        );
+      transform: translateX(-15%) skewX(-10deg);
+      animation: rlcPaintWipe 680ms ease-out forwards;
+      will-change: transform, opacity;
+    }
+  }
 }
 
 @layer components {
   .navlink {
     @apply text-sm font-semibold text-slate-700 hover:text-brand-900;
+    @apply transition-colors;
   }
+
   .btn {
     @apply inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-bold transition;
     @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500 focus-visible:ring-offset-2;
+    @apply active:scale-[0.99];
+    min-height: 44px; /* mobile tap target */
   }
+
   .btn-primary {
     @apply bg-brand-900 text-white hover:bg-brand-800;
   }
+
   .btn-accent {
     @apply bg-accent-500 text-white hover:bg-accent-600;
   }
+
   .btn-outline {
     @apply border border-slate-300 bg-white text-brand-900 hover:bg-brand-50;
   }
-  .card {
-    @apply rounded-2xl bg-white p-5 shadow-soft ring-1 ring-slate-200/60;
-  }
+
   .btn-outline-white {
     @apply border border-white/30 bg-white/5 text-white hover:bg-white/10
       focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-900;
+  }
+
+  .card {
+    @apply rounded-2xl bg-white p-5 shadow-soft ring-1 ring-slate-200/60;
+  }
+
+  /* Slightly tighter padding on very small screens so cards don’t feel cramped */
+  @media (max-width: 360px) {
+    .card {
+      padding: 1.05rem;
+    }
+    .btn {
+      padding-left: 0.9rem;
+      padding-right: 0.9rem;
+    }
   }
 }

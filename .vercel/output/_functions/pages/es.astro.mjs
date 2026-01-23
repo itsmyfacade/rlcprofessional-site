@@ -1,7 +1,8 @@
-import { e as createComponent, k as renderComponent, r as renderTemplate } from '../chunks/astro/server_CALqXRaA.mjs';
+import { e as createComponent, k as renderComponent, r as renderTemplate } from '../chunks/astro/server_Ci0mos5O.mjs';
 import 'piccolore';
-import { $ as $$BaseLayout, s as site } from '../chunks/site_a4MGRwbI.mjs';
-import { $ as $$WhatsAppFab, a as $$Footer, g as getT, b as $$GalleryLive, c as $$QuotesForm, d as $$Services, e as $$Hero, f as $$Nav } from '../chunks/GalleryLive_Bo8Voqou.mjs';
+import { $ as $$BaseLayout, s as site } from '../chunks/site_DnBBxJTs.mjs';
+import { $ as $$Nav } from '../chunks/Nav_VhNE4QVf.mjs';
+import { $ as $$WhatsAppFab, a as $$Footer, b as $$GalleryLive, c as $$QuotesForm, d as $$Services, e as $$Hero, g as getT } from '../chunks/GalleryLive_8brZ_Ia5.mjs';
 export { renderers } from '../renderers.mjs';
 
 var __freeze = Object.freeze;

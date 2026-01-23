@@ -10,40 +10,16 @@ import QuotesForm from "../../components/QuotesForm.astro";
 import site from "../../content/site.json";
 import { getT } from "../../i18n/t";
 import GalleryLive from "../../components/GalleryLive.astro";
+import LocalBusinessSchema from "../../components/LocalBusinessSchema.astro";
 
 const lang = "es";
 const t = getT(lang);
 
-const canonical = "https://RLCprofessional.com/es/";
+// ✅ Normalize canonical (avoid duplicate indexing due to casing)
+const canonical = "https://rlcprofessional.com/es/";
 const title = "Pintores en Haines City | RLC Professional";
 const description =
-  "Pintura interior/exterior, pressure washing y reparación de goteras en Haines City, Kissimmee y Davenport. Estimados rápidos.";
-
-const schema = {
-  "@context": "https://schema.org",
-  "@type": "HomeAndConstructionBusiness",
-  "name": site.brandName,
-  "url": canonical,
-  "image": `https://RLCprofessional.com${site.assets.ogImage}`,
-  "email": "info@rlcprofessional.com",
-  "telephone": site.phoneTel,
-  "address": {
-    "@type": "PostalAddress",
-    "streetAddress": "2450 Myrtle Ave",
-    "addressLocality": "Haines City",
-    "addressRegion": "FL",
-    "postalCode": "33844",
-    "addressCountry": "US"
-  },
-  "areaServed": ["Haines City, FL", "Kissimmee, FL", "Davenport, FL"],
-  "serviceType": [
-    "Pintura Interior",
-    "Pintura Exterior",
-    "Pressure Washing",
-    "Limpieza de Concreto",
-    "Reparación de Goteras"
-  ]
-};
+  "Pintura interior/exterior, pressure washing, sellado y reparación de goteras en Haines City, Kissimmee y Davenport. Estimados rápidos.";
 ---
 
 <BaseLayout
@@ -54,14 +30,15 @@ const schema = {
   ogImage={site.assets.ogImage}
 >
   <Nav t={t} site={site} lang={lang} />
-  <Hero t={t} site={site}/>
+  <Hero t={t} site={site} />
   <Services t={t} />
   <QuotesForm t={t} formUrl={site.tallyFormUrlEs} />
   <GalleryLive t={t} site={site} lang={lang} />
+
   <Footer site={site} t={t} />
   <WhatsAppFab site={site} />
 
-  <script type="application/ld+json">
-    {JSON.stringify(schema)}
-  </script>
+  <!-- ✅ Single source of truth for JSON-LD (avoid duplicate/conflicting schema scripts) -->
+  <LocalBusinessSchema lang={lang} site={site} />
 </BaseLayout>
+---

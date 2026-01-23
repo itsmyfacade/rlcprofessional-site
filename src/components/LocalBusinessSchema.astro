@@ -1,0 +1,161 @@
+---
+const props = Astro.props as {
+  site: any;
+  lang: "en" | "es";
+};
+
+const site = props.site;
+const lang = props.lang;
+
+const clean = (v: any) => (typeof v === "string" ? v.trim() : v);
+const digitsOnly = (v: any) => String(v ?? "").replace(/\D/g, "");
+const withHttps = (u: any) => {
+  const s = String(u ?? "").trim();
+  if (!s) return "";
+  if (s.startsWith("http://") || s.startsWith("https://")) return s;
+  return `https://${s.replace(/^\/\//, "")}`;
+};
+
+const brandName = clean(site?.brandName) || "RLC Professional";
+
+// ✅ Resolve baseUrl robustly (site.json uses meta.canonical)
+const baseUrl = withHttps(
+  site?.url ||
+    site?.siteUrl ||
+    site?.domain ||
+    site?.meta?.canonical ||
+    import.meta.env.SITE ||
+    "https://rlcprofessional.com/"
+);
+
+// ✅ Ensure absolute asset URLs (site.json stores /assets/...)
+const toAbs = (path: any) => {
+  const p = String(path ?? "").trim();
+  if (!p) return "";
+  if (p.startsWith("http://") || p.startsWith("https://")) return p;
+  if (p.startsWith("/")) return `${new URL(baseUrl).origin}${p}`;
+  return `${new URL(baseUrl).origin}/${p.replace(/^\/+/, "")}`;
+};
+
+const logoUrl = toAbs(site?.assets?.logo);
+const imageUrl = toAbs(site?.assets?.ogImage || site?.assets?.heroImage || site?.assets?.hero);
+
+// ✅ Phones (site.json has photoTel2 typo currently; support both keys to be safe)
+const phone1 = digitsOnly(site?.phoneTel || site?.phone || "");
+const phone2 = digitsOnly(site?.phoneTel2 || site?.photoTel2 || site?.phone2 || "");
+const email = clean(site?.email || site?.contactEmail || site?.ownerEmail || "");
+
+// ✅ Privacy-safe address only (no street in JSON-LD)
+const city = clean(site?.address?.addressLocality || "Haines City");
+const region = clean(site?.address?.addressRegion || "FL");
+const country = clean(site?.address?.addressCountry || "US");
+
+// ✅ Service areas: support both serviceAreas array and serviceArea string
+const areas =
+  Array.isArray(site?.serviceAreas) && site.serviceAreas.length
+    ? site.serviceAreas
+    : typeof site?.serviceArea === "string" && site.serviceArea.trim()
+      ? site.serviceArea
+          .replace(/^Serving\s+/i, "")
+          .split(/[,&]/g)
+          .map((s: string) => s.trim())
+          .filter(Boolean)
+      : ["Haines City", "Kissimmee", "Davenport", "Poinciana"];
+
+const sameAs = Array.isArray(site?.social) ? site.social.map(withHttps).filter(Boolean) : [];
+
+// ✅ Services (use "serviceType" instead of knowsAbout; more standard for this use)
+const servicesEn = [
+  "Interior Painting",
+  "Exterior Painting",
+  "Professional Painting",
+  "Pressure Washing",
+  "Driveway & Concrete Cleaning",
+  "Sealing (Driveways/Concrete)",
+  "Roof Leak Repair",
+  "Roof Repairs",
+];
+
+const servicesEs = [
+  "Pintura Interior",
+  "Pintura Exterior",
+  "Pintura Profesional",
+  "Lavado a Presión",
+  "Limpieza de Entrada y Concreto",
+  "Sellado (Entrada/Concreto)",
+  "Reparación de Goteras en Techos",
+  "Reparaciones de Techo",
+];
+
+const serviceList = lang === "es" ? servicesEs : servicesEn;
+
+// Optional coordinates
+const lat = site?.geo?.latitude;
+const lng = site?.geo?.longitude;
+
+// ✅ Prefer a business type aligned to your services
+const data: any = {
+  "@context": "https://schema.org",
+  "@type": "HomeAndConstructionBusiness",
+  name: brandName,
+  url: baseUrl,
+  ...(logoUrl ? { logo: logoUrl } : {}),
+  ...(imageUrl ? { image: imageUrl } : {}),
+  description:
+    lang === "es"
+      ? "Pintura profesional, lavado a presión, sellado y reparación de goteras en techos."
+      : "Professional painting, pressure washing, sealing, and roof leak repair.",
+
+  // ✅ Use a single primary phone (Google-friendly)
+  ...(phone1 ? { telephone: `+1${phone1}` } : {}),
+  ...(email ? { email } : {}),
+
+  // ✅ Privacy-safe address (no street, no postalCode)
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: city,
+    addressRegion: region,
+    addressCountry: country,
+  },
+
+  ...(lat && lng
+    ? {
+        geo: {
+          "@type": "GeoCoordinates",
+          latitude: lat,
+          longitude: lng,
+        },
+      }
+    : {}),
+
+  areaServed: areas.map((a: string) => ({ "@type": "City", name: a })),
+
+  // ✅ Better field for services
+  serviceType: serviceList,
+
+  // ✅ Keep offers (structured + useful)
+  makesOffer: serviceList.map((s) => ({
+    "@type": "Offer",
+    itemOffered: { "@type": "Service", name: s },
+  })),
+
+  // ✅ Store secondary phone cleanly without messing up telephone format
+  ...(phone2
+    ? {
+        additionalProperty: [
+          {
+            "@type": "PropertyValue",
+            name: "Secondary phone",
+            value: `+1${phone2}`,
+          },
+        ],
+      }
+    : {}),
+
+  ...(sameAs.length ? { sameAs } : {}),
+};
+
+const json = JSON.stringify(data);
+---
+
+<script type="application/ld+json" set:html={json} />

@@ -14,7 +14,7 @@ const message =
 
 // ✅ wa.me requires digits only
 const whatsappNumberRaw = (site as any)?.whatsappNumber ?? "";
-const whatsappNumber = String(whatsappNumberRaw).replace(/\D/g, "");
+const whatsappNumber = String(whatsappNumberRaw || "").replace(/\D/g, "").trim();
 
 // ✅ Always use wa.me (better mobile handling)
 const waUrl = whatsappNumber

@@ -1,7 +1,10 @@
 {
   "brandName": "RLC Professional",
+  "url": "https://rlcprofessional.com/",
   "phoneTel": "+18632585424",
   "phoneDisplay": "(863) 258-5424",
+  "phoneTel2": "+18633902698",
+  "phoneDisplay2": "(863) 390-2698",
   "whatsappNumber": "18632585424",
   "email": "info@rlcprofessional.com",
   "assets": {
@@ -17,11 +20,10 @@
   "tallyFormUrlEn": "https://tally.so/r/4478Xb",
   "tallyFormUrlEs": "https://tally.so/r/4478jA",
   "galleryFeed": {
-  "en": "https://script.google.com/macros/s/AKfycbxsUcI49iXKivH6KARNBm4Z3vRbFJ1CYQ8foxDrvBm4d8qyDXsZaTtp19Lfm92nn1fTpg/exec?gid=0",
-  "es": "https://script.google.com/macros/s/AKfycbxsUcI49iXKivH6KARNBm4Z3vRbFJ1CYQ8foxDrvBm4d8qyDXsZaTtp19Lfm92nn1fTpg/exec?gid=1337806420"
-},
+    "en": "https://script.google.com/macros/s/AKfycbxsUcI49iXKivH6KARNBm4Z3vRbFJ1CYQ8foxDrvBm4d8qyDXsZaTtp19Lfm92nn1fTpg/exec?gid=0",
+    "es": "https://script.google.com/macros/s/AKfycbxsUcI49iXKivH6KARNBm4Z3vRbFJ1CYQ8foxDrvBm4d8qyDXsZaTtp19Lfm92nn1fTpg/exec?gid=1337806420"
+  },
   "gallery": [
-
     {
       "label": "Exterior repaint + trim",
       "location": "Kissimmee, FL",
@@ -46,4 +48,3 @@
   },
   "serviceArea": "Serving Kissimmee, Haines City, & Poinciana"
 }
-

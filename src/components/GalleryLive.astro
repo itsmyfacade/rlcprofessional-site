@@ -6,7 +6,10 @@ const { t, site, lang } = Astro.props as { t: any; site: any; lang: "en" | "es" 
 const feedEn = site.galleryFeed?.en ?? "";
 const feedEs = site.galleryFeed?.es ?? "";
 
-const [itemsEn, itemsEs] = await Promise.all([fetchGalleryFeed(feedEn, 60), fetchGalleryFeed(feedEs, 60)]);
+const [itemsEn, itemsEs] = await Promise.all([
+  fetchGalleryFeed(feedEn, 60),
+  fetchGalleryFeed(feedEs, 60),
+]);
 
 const mergedMap = new Map<string, GalleryItem>();
 for (const it of [...itemsEn, ...itemsEs]) mergedMap.set(it.id, it);
@@ -48,7 +51,6 @@ const ui = {
       ? "Video no disponible en este momento. Por favor, actualice la página."
       : "Video unavailable right now. Please refresh."),
 };
-
 
 function normalizeServiceLabel(s?: string) {
   const raw = (s ?? "").trim().toLowerCase();
@@ -218,6 +220,28 @@ function normalizeVideoSrc(u?: string) {
 
   return s;
 }
+
+// ✅ Build structured data for the first few gallery items (SEO)
+const gallerySchemaItems = items
+  .filter(hasAnyMedia)
+  .slice(0, 8)
+  .map((it) => {
+    const img =
+      (it.afterUrl || it.beforeUrl || (it.morePhotoUrls && it.morePhotoUrls[0]) || "").toString();
+    const name = (translateService(it.serviceType, lang) || ui.untitled).toString();
+    const loc = (it.city || "").toString();
+
+    return {
+      "@type": "CreativeWork",
+      name: loc ? `${name} — ${loc}` : name,
+      image: img ? [img] : undefined,
+      url: it.publicLink || undefined,
+      description: (it.caption || "").toString() || undefined,
+    };
+  });
+
+// ✅ Stable id for IO observer / cleanup
+const GALLERY_VIDEO_IO_KEY = "__rlcGalleryVideoIO";
 ---
 
 <section id="gallery" class="border-t border-slate-200/60 bg-brand-50">
@@ -389,6 +413,21 @@ function normalizeVideoSrc(u?: string) {
     )}
   </div>
 
+  {/* ✅ Gallery structured data */}
+  {gallerySchemaItems.length ? (
+    <script type="application/ld+json">
+      {JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        itemListElement: gallerySchemaItems.map((it, i) => ({
+          "@type": "ListItem",
+          position: i + 1,
+          item: it,
+        })),
+      })}
+    </script>
+  ) : null}
+
   <style>
     @keyframes rlcPulse {
       0% { transform: scale(1); opacity: 0.9; }
@@ -407,6 +446,7 @@ function normalizeVideoSrc(u?: string) {
       to { opacity: 1; }
     }
 
+    /* Keeps your existing failsafe */
     .js-video-loader-failsafe {
       animation: loaderFadeOut 200ms ease forwards;
       animation-delay: 2.6s;
@@ -420,6 +460,8 @@ function normalizeVideoSrc(u?: string) {
 
   <script is:inline>
     {`
+      const KEY = ${JSON.stringify(GALLERY_VIDEO_IO_KEY)};
+
       const forceMute = (el) => {
         if (!el) return;
         try { el.muted = true; el.volume = 0; el.defaultMuted = true; } catch (_) {}
@@ -440,7 +482,9 @@ function normalizeVideoSrc(u?: string) {
       };
 
       const hardLoop = (v) => {
-        if (!v) return;
+        if (!v || v.__hardLoopAttached) return;
+        v.__hardLoopAttached = true;
+
         v.addEventListener("ended", () => {
           try { v.currentTime = 0; tryPlay(v); } catch (_) {}
         }, { passive: true });
@@ -481,7 +525,7 @@ function normalizeVideoSrc(u?: string) {
         if (fail) fail.classList.remove("hidden");
 
         try { videoEl.pause?.(); } catch (_) {}
-        videoEl.style.display = "none";
+        try { videoEl.style.display = "none"; } catch (_) {}
       };
 
       const bufferedHasData = (v) => {
@@ -528,11 +572,46 @@ function normalizeVideoSrc(u?: string) {
         }, 15000);
       };
 
-      const boot = () => {
-        document.querySelectorAll("video.js-autoplay-video").forEach((v) => {
+      // ✅ play/pause based on visibility (mobile perf)
+      const getSharedObserver = () => {
+        if (!("IntersectionObserver" in window)) return null;
+
+        if (window[KEY] && window[KEY].__io) return window[KEY].__io;
+
+        const io = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            const vid = entry && entry.target;
+            if (!vid) return;
+
+            if (entry.isIntersecting && entry.intersectionRatio > 0.25) {
+              tryPlay(vid);
+            } else {
+              try { vid.pause?.(); } catch (_) {}
+            }
+          });
+        }, { threshold: [0, 0.25, 0.5] });
+
+        window[KEY] = window[KEY] || {};
+        window[KEY].__io = io;
+        return io;
+      };
+
+      const attachVisibilityControl = (v) => {
+        if (!v || v.__visAttached) return;
+        v.__visAttached = true;
+
+        const io = getSharedObserver();
+        if (!io) return;
+
+        try { io.observe(v); } catch (_) {}
+      };
+
+      const boot = (root = document) => {
+        root.querySelectorAll("video.js-autoplay-video").forEach((v) => {
           forceMute(v);
           attachRealReveal(v);
           hardLoop(v);
+          attachVisibilityControl(v);
           tryPlay(v);
 
           v.addEventListener("loadedmetadata", () => tryPlay(v), { passive: true });
@@ -540,11 +619,15 @@ function normalizeVideoSrc(u?: string) {
         });
       };
 
+      // normal load
       if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", boot, { passive: true });
+        document.addEventListener("DOMContentLoaded", () => boot(document), { passive: true });
       } else {
-        boot();
+        boot(document);
       }
+
+      // ✅ Astro view transitions / SPA navigation support
+      document.addEventListener("astro:page-load", () => boot(document), { passive: true });
     `}
   </script>
 </section>

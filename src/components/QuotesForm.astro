@@ -17,8 +17,6 @@ const redirectUrl = origin ? `${origin}${thanksPath}` : thanksPath;
 const srcUrl = new URL(formUrl);
 srcUrl.searchParams.set("lang", lang);
 srcUrl.searchParams.set("redirect", redirectUrl);
-
-// Optional but safe: tell Tally this is embedded (some builders use it)
 srcUrl.searchParams.set("embed", "1");
 
 // Final URL string
@@ -27,46 +25,100 @@ const iframeSrc = srcUrl.toString();
 
 <section id="quote" class="border-t border-slate-200/60 bg-brand-50">
   <div class="mx-auto max-w-6xl px-4 py-12">
-    <div class="grid gap-8 lg:grid-cols-2 lg:items-start">
-      <div>
-        <h2 class="text-2xl font-extrabold text-brand-900">
-          {t.quote.title}
-        </h2>
-        <p class="mt-2 text-slate-700">
-          {t.quote.subtitle}
-        </p>
+    <!-- Section header -->
+    <div class="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div class="max-w-2xl">
+        <h2 class="text-2xl font-extrabold text-brand-900">{t.quote.title}</h2>
+        <p class="mt-2 text-slate-700">{t.quote.subtitle}</p>
+      </div>
 
-        <div class="mt-5 grid gap-3 sm:grid-cols-2">
-          <div class="card">
-            <p class="text-sm font-bold text-brand-900">{t.quote.b1Title}</p>
-            <p class="mt-1 text-sm text-slate-700">{t.quote.b1Desc}</p>
+      <!-- Optional “call now” micro-CTA without requiring new i18n -->
+      <a
+        href="#contact"
+        class="btn btn-outline w-full sm:w-fit"
+        aria-label={lang === "es" ? "Ir a contacto" : "Go to contact"}
+      >
+        {lang === "es" ? "Contacto" : "Contact"}
+      </a>
+    </div>
+
+    <div class="grid gap-8 lg:grid-cols-2 lg:items-start">
+      <!-- Left: trust + what to expect -->
+      <div class="space-y-4">
+        <div class="rounded-3xl bg-white p-5 shadow-soft ring-1 ring-slate-200/60">
+          <p class="text-sm font-extrabold text-brand-900">
+            {lang === "es" ? "Qué pasa después" : "What happens next"}
+          </p>
+
+          <div class="mt-4 grid gap-3 sm:grid-cols-2">
+            <div class="rounded-2xl bg-brand-50 p-4 ring-1 ring-slate-200/60">
+              <p class="text-sm font-bold text-brand-900">{t.quote.b1Title}</p>
+              <p class="mt-1 text-sm text-slate-700">{t.quote.b1Desc}</p>
+            </div>
+
+            <div class="rounded-2xl bg-brand-50 p-4 ring-1 ring-slate-200/60">
+              <p class="text-sm font-bold text-brand-900">{t.quote.b2Title}</p>
+              <p class="mt-1 text-sm text-slate-700">{t.quote.b2Desc}</p>
+            </div>
+
+            <div class="rounded-2xl bg-brand-50 p-4 ring-1 ring-slate-200/60 sm:col-span-2">
+              <p class="text-sm font-bold text-brand-900">{t.quote.b3Title}</p>
+              <p class="mt-1 text-sm text-slate-700">{t.quote.b3Desc}</p>
+            </div>
           </div>
-          <div class="card">
-            <p class="text-sm font-bold text-brand-900">{t.quote.b2Title}</p>
-            <p class="mt-1 text-sm text-slate-700">{t.quote.b2Desc}</p>
+
+          <div class="mt-5 flex flex-wrap items-center gap-2">
+            <span class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200/70">
+              <span class="h-2 w-2 rounded-full bg-accent-500"></span>
+              {lang === "es" ? "Respuestas rápidas" : "Fast responses"}
+            </span>
+            <span class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200/70">
+              <span class="h-2 w-2 rounded-full bg-accent-500"></span>
+              {lang === "es" ? "Estimados claros" : "Clear estimates"}
+            </span>
+            <span class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200/70">
+              <span class="h-2 w-2 rounded-full bg-accent-500"></span>
+              {lang === "es" ? "Fotos permitidas" : "Photos supported"}
+            </span>
           </div>
-          <div class="card sm:col-span-2">
-            <p class="text-sm font-bold text-brand-900">{t.quote.b3Title}</p>
-            <p class="mt-1 text-sm text-slate-700">{t.quote.b3Desc}</p>
-          </div>
+        </div>
+
+        <!-- Small reassurance block (no new keys needed) -->
+        <div class="rounded-3xl bg-white p-5 shadow-soft ring-1 ring-slate-200/60">
+          <p class="text-sm font-extrabold text-brand-900">
+            {lang === "es" ? "Consejo para un estimado exacto" : "Tip for an accurate quote"}
+          </p>
+          <p class="mt-2 text-sm text-slate-700">
+            {lang === "es"
+              ? "Incluya 2–3 fotos y una nota rápida sobre el área. Así podemos responder más rápido y con mejor precisión."
+              : "Include 2–3 photos and a quick note about the area. We can respond faster and quote more accurately."}
+          </p>
         </div>
       </div>
 
+      <!-- Right: form card -->
       <div class="overflow-hidden rounded-3xl bg-white shadow-soft ring-1 ring-slate-200/60">
         <div class="border-b border-slate-200/60 bg-white px-5 py-4">
           <p class="text-sm font-extrabold text-brand-900">{t.quote.formTitle}</p>
           <p class="mt-1 text-xs text-slate-600">{t.quote.formNote}</p>
         </div>
 
+        <!-- Better embed container sizing + mobile stability -->
         <div class="p-2 sm:p-4">
           <iframe
             title={t.quote.formTitle}
             src={iframeSrc}
             loading="lazy"
-            class="h-180 w-full rounded-2xl"
-            style="border:0;"
+            class="w-full rounded-2xl"
+            style="border:0; height: 44rem;"
             allow="camera; microphone; geolocation"
           ></iframe>
+
+          <p class="mt-3 text-xs text-slate-500">
+            {lang === "es"
+              ? "Al enviar este formulario, será redirigido(a) a la página de confirmación."
+              : "After submitting, you’ll be redirected to the confirmation page."}
+          </p>
         </div>
       </div>
     </div>

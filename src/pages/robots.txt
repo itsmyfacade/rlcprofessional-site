@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://rlcprofessionl.com/sitemap.xml
+Sitemap: https://rlcprofessional.com/sitemap.xml

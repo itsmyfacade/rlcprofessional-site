@@ -1,15 +1,28 @@
 export const prerender = true;
 
+// ✅ Keep this simple + explicit (only real routes you have)
 const pages = [
-  "/", 
+  "/",
   "/thanks",
+  "/privacy",
+  "/terms",
+  "/owner-upload",
+
   "/es/",
+  "/es/thanks",
+  "/es/privacy",
+  "/es/terms",
+  "/es/owner-upload",
 ];
 
 export async function GET() {
   const site = import.meta.env.SITE || "https://rlcprofessional.com";
+
   const urls = pages
-    .map((p) => `<url><loc>${new URL(p, site).toString()}</loc></url>`)
+    .map((p) => {
+      const loc = new URL(p, site).toString();
+      return `<url><loc>${loc}</loc></url>`;
+    })
     .join("");
 
   const body = `<?xml version="1.0" encoding="UTF-8"?>
