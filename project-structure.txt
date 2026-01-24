@@ -1,17 +1,8 @@
-find . \
-  -path "./node_modules" -prune -o \
-  -path "./.vscode" -prune -o \
-  -path "./.venv" -prune -o \
-  -path "./.git" -prune -o \
-  -print > project-structure.txt
-
-
 .
 ./.astro
 ./.astro/collections
 ./.astro/content-assets.mjs
 ./.astro/content-modules.mjs
-./.astro/content.d.ts
 ./.astro/data-store.json
 ./.astro/settings.json
 ./.astro/types.d.ts
