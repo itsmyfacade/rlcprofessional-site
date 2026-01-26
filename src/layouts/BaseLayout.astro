@@ -13,47 +13,64 @@ const { lang, title, description, canonical, ogImage } = Astro.props as Props;
 
 const isEs = lang === "es";
 
-// ✅ Normalize canonical to avoid duplicate indexing due to casing + missing trailing slash
+/**
+ * ✅ Force a single public origin to eliminate mixed signals (www vs non-www, http vs https)
+ * This prevents duplicate indexing + helps favicon + structured data consistency.
+ */
+const FORCED_ORIGIN = "https://www.rlcprofessional.com";
+
+/**
+ * ✅ Normalize canonical URL:
+ * - forces https + www (FORCED_ORIGIN)
+ * - standardizes /es/ slash
+ * - ensures trailing slash for non-file paths
+ * - removes hash
+ */
 function normalizeCanonical(input: string) {
   const raw = (input ?? "").trim();
-  if (!raw) return raw;
+  if (!raw) return `${FORCED_ORIGIN}/`;
 
   try {
     const u = new URL(raw);
-    // force lowercase host
-    u.host = u.host.toLowerCase();
 
-    // standardize pathname slashes for root and /es/
+    // Force public origin (www + https)
+    const forced = new URL(FORCED_ORIGIN);
+    u.protocol = forced.protocol;
+    u.host = forced.host;
+
+    // Standardize pathname slashes for root and /es/
     const p = u.pathname || "/";
     if (p === "/es") u.pathname = "/es/";
     else if (p === "") u.pathname = "/";
     else if (!p.endsWith("/") && !p.includes(".")) u.pathname = p + "/";
 
-    // canonical should not include hash
+    // Canonical should not include hash
     u.hash = "";
+
     return u.toString();
   } catch (_) {
-    // fallback: return as-is (safe)
-    return raw;
+    // Fallback: treat as a path
+    const path = raw.startsWith("/") ? raw : `/${raw}`;
+    const u = new URL(path, FORCED_ORIGIN);
+
+    if (u.pathname === "/es") u.pathname = "/es/";
+    else if (!u.pathname.endsWith("/") && !u.pathname.includes(".")) u.pathname += "/";
+
+    u.hash = "";
+    return u.toString();
   }
 }
 
 const canonicalUrl = normalizeCanonical(canonical);
 
-// ✅ Stable site origin from canonical (or Astro.url in dev)
-const siteOrigin = (() => {
-  try {
-    return canonicalUrl ? new URL(canonicalUrl).origin : (Astro.url?.origin ?? "");
-  } catch (_) {
-    return Astro.url?.origin ?? "";
-  }
-})();
+// ✅ Stable site origin (forced)
+const siteOrigin = FORCED_ORIGIN;
 
 // ✅ hreflang targets (always absolute, always stable)
-const altEn = siteOrigin ? `${siteOrigin}/` : canonicalUrl;
-const altEs = siteOrigin ? `${siteOrigin}/es/` : canonicalUrl;
+const altEn = `${siteOrigin}/`;
+const altEs = `${siteOrigin}/es/`;
 
-// ✅ Make og image absolute (Meta/Twitter prefer this)
+// ✅ Make OG image absolute (Meta/Twitter prefer this)
 function toAbsoluteImageUrl(input: string) {
   const s = (input ?? "").trim();
   if (!s) return s;
@@ -62,34 +79,27 @@ function toAbsoluteImageUrl(input: string) {
   if (/^https?:\/\//i.test(s)) return s;
 
   // treat as path
-  if (siteOrigin && s.startsWith("/")) return `${siteOrigin}${s}`;
-  if (siteOrigin) return `${siteOrigin}/${s.replace(/^\/+/, "")}`;
-
-  return s;
+  if (s.startsWith("/")) return `${siteOrigin}${s}`;
+  return `${siteOrigin}/${s.replace(/^\/+/, "")}`;
 }
 
 const ogImageAbs = toAbsoluteImageUrl(ogImage);
 
 /**
- * ✅ Title translation: default English, Spanish when /es/
- * If a page passes a custom title, we translate only the common known one.
- * Otherwise we keep the original (safe, won't break custom pages).
+ * ✅ Title localization for known titles only (safe)
  */
 function localizedTitle(input: string) {
   const s = (input ?? "").trim();
   if (!s) return s;
 
-  // Exact match for your current default/home title
   if (s === "Painters in Kissimmee | RLC Professional") {
     return isEs ? "Pintores en Kissimmee | RLC Professional" : s;
   }
 
-  // If you later switch to Haines City (recommended), this will still work
   if (s === "Painters in Haines City | RLC Professional") {
     return isEs ? "Pintores en Haines City | RLC Professional" : s;
   }
 
-  // Otherwise: don't guess (prevents breaking SEO titles on other pages)
   return s;
 }
 
@@ -99,6 +109,16 @@ const ogTitle = pageTitle;
 // Route-aware perf hints (only preload hero assets on home pages)
 const pathname = Astro.url?.pathname ?? "/";
 const isHome = pathname === "/" || pathname === "/es/" || pathname === "/es";
+
+/**
+ * ✅ Structured data safety:
+ * If any JSON-LD gets built with undefined / invalid values,
+ * Search Console can flag it as "unparsable".
+ * This helper guarantees valid JSON output.
+ */
+
+// ✅ Cache-bust favicons when you update them (helps browsers + sometimes Google)
+const FAVICON_VERSION = "3"; // bump this when favicon assets change
 ---
 
 <!doctype html>
@@ -107,12 +127,13 @@ const isHome = pathname === "/" || pathname === "/es/" || pathname === "/es";
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="google-site-verification" content="u1JWrF-PWC0wnFhng-0jcpJB54mOAiE0LU-ZNC5syJE" />
+
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
     <meta name="robots" content="index,follow" />
     <link rel="canonical" href={canonicalUrl} />
 
-    <!-- ✅ Bilingual SEO (absolute, stable, avoids casing duplicates) -->
+    <!-- ✅ Bilingual SEO (absolute, stable) -->
     <link rel="alternate" hreflang="en" href={altEn} />
     <link rel="alternate" hreflang="es" href={altEs} />
     <link rel="alternate" hreflang="x-default" href={altEn} />
@@ -136,41 +157,60 @@ const isHome = pathname === "/" || pathname === "/es/" || pathname === "/es";
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#1A2B3C" />
 
-    <!-- ✅ Favicons (match EXACT /public files) -->
-    <link rel="icon" href="/favicon.ico" sizes="any" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <link rel="manifest" href="/site.webmanifest" />
+    <!-- ✅ Favicons (cache-busted) -->
+    <link rel="icon" href={`/favicon.ico?v=${FAVICON_VERSION}`} sizes="any" />
+    <link rel="shortcut icon" href={`/favicon.ico?v=${FAVICON_VERSION}`} />
+    <link rel="icon" type="image/svg+xml" href={`/favicon.svg?v=${FAVICON_VERSION}`} />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="96x96"
+      href={`/favicon-96x96.png?v=${FAVICON_VERSION}`}
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href={`/apple-touch-icon.png?v=${FAVICON_VERSION}`}
+    />
+    <link rel="manifest" href={`/site.webmanifest?v=${FAVICON_VERSION}`} />
 
     <!-- Perf hints (safe) -->
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
 
-    {isHome ? (
-      <>
-        <!-- Home-only: preloads to improve LCP / first impression -->
-        <link rel="preload" as="image" href="/assets/hero-tools.jpg" />
-        <link rel="preload" as="image" href="/assets/hero.jpg" />
-      </>
-    ) : null}
+    {
+      isHome ? (
+        <>
+          <link rel="preload" as="image" href="/assets/hero-tools.jpg" />
+          <link rel="preload" as="image" href="/assets/hero.jpg" />
+        </>
+      ) : null
+    }
+
+    <!-- ✅ Optional, safe security policy for embeds (doesn't break your site) -->
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
 
     <style>
-      html { scroll-behavior: smooth; }
+      html {
+        scroll-behavior: smooth;
+      }
 
-      /* ===== Premium first-load paint reveal (lightweight, no dependencies) ===== */
-      body { min-height: 100vh; }
+      body {
+        min-height: 100vh;
+      }
 
-      /* "JS enabled" hook */
-      html:not(.js) .rlc-paint-overlay { display: none; }
+      html:not(.js) .rlc-paint-overlay {
+        display: none;
+      }
 
       .rlc-paint-overlay {
         position: fixed;
         inset: 0;
         z-index: 9998;
         pointer-events: none;
-        background: radial-gradient(1200px circle at 20% 10%, rgba(230,126,34,0.10), transparent 55%),
-                    linear-gradient(135deg, rgba(26,43,60,0.92), rgba(26,43,60,0.82));
+        background:
+          radial-gradient(1200px circle at 20% 10%, rgba(230, 126, 34, 0.1), transparent 55%),
+          linear-gradient(135deg, rgba(26, 43, 60, 0.92), rgba(26, 43, 60, 0.82));
         opacity: 1;
         transform: translateZ(0);
       }
@@ -179,19 +219,35 @@ const isHome = pathname === "/" || pathname === "/es/" || pathname === "/es";
         position: absolute;
         inset: -20%;
         background:
-          radial-gradient(900px 260px at 18% 35%, rgba(255,255,255,0.20), rgba(255,255,255,0) 70%),
-          radial-gradient(900px 300px at 34% 55%, rgba(230,126,34,0.25), rgba(230,126,34,0) 72%),
-          radial-gradient(900px 260px at 58% 45%, rgba(255,255,255,0.16), rgba(255,255,255,0) 70%),
-          radial-gradient(900px 260px at 78% 62%, rgba(230,126,34,0.18), rgba(230,126,34,0) 72%);
+          radial-gradient(
+            900px 260px at 18% 35%,
+            rgba(255, 255, 255, 0.2),
+            rgba(255, 255, 255, 0) 70%
+          ),
+          radial-gradient(
+            900px 300px at 34% 55%,
+            rgba(230, 126, 34, 0.25),
+            rgba(230, 126, 34, 0) 72%
+          ),
+          radial-gradient(
+            900px 260px at 58% 45%,
+            rgba(255, 255, 255, 0.16),
+            rgba(255, 255, 255, 0) 70%
+          ),
+          radial-gradient(
+            900px 260px at 78% 62%,
+            rgba(230, 126, 34, 0.18),
+            rgba(230, 126, 34, 0) 72%
+          );
         filter: blur(10px);
         opacity: 0.95;
         transform: translateX(-22%) rotate(-6deg);
       }
 
-      /* Default: content is visible even without JS (no blank screens) */
-      html.js body { opacity: 1; }
+      html.js body {
+        opacity: 1;
+      }
 
-      /* When JS starts: we animate overlay out quickly */
       html.js.rlc-ready .rlc-paint-overlay {
         opacity: 0;
         transition: opacity 520ms ease;
@@ -201,7 +257,6 @@ const isHome = pathname === "/" || pathname === "/es/" || pathname === "/es";
         transition: transform 720ms cubic-bezier(0.22, 1, 0.36, 1);
       }
 
-      /* Scroll reveal utility (only applies if elements opt-in with [data-reveal]) */
       [data-reveal] {
         opacity: 1;
         transform: none;
@@ -209,7 +264,9 @@ const isHome = pathname === "/" || pathname === "/es/" || pathname === "/es";
       html.js [data-reveal] {
         opacity: 0;
         transform: translateY(10px);
-        transition: opacity 520ms ease, transform 620ms cubic-bezier(0.22, 1, 0.36, 1);
+        transition:
+          opacity 520ms ease,
+          transform 620ms cubic-bezier(0.22, 1, 0.36, 1);
         will-change: opacity, transform;
       }
       html.js [data-reveal].is-visible {
@@ -218,28 +275,39 @@ const isHome = pathname === "/" || pathname === "/es/" || pathname === "/es";
       }
 
       @media (prefers-reduced-motion: reduce) {
-        html { scroll-behavior: auto; }
-        .rlc-paint-overlay, .rlc-paint-stroke { display: none !important; }
-        html.js [data-reveal] { opacity: 1 !important; transform: none !important; transition: none !important; }
+        html {
+          scroll-behavior: auto;
+        }
+        .rlc-paint-overlay,
+        .rlc-paint-stroke {
+          display: none !important;
+        }
+        html.js [data-reveal] {
+          opacity: 1 !important;
+          transform: none !important;
+          transition: none !important;
+        }
       }
     </style>
 
     <script is:inline>
-      {`
-        // Add a deterministic JS hook early
+      {
+        `
         document.documentElement.classList.add("js");
-      `}
+      `;
+      }
     </script>
   </head>
 
   <body>
     <noscript>
-      <div style="padding:12px 16px; background:#fff3cd; color:#1a1a1a; font:14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Arial;">
+      <div
+        style="padding:12px 16px; background:#fff3cd; color:#1a1a1a; font:14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Arial;"
+      >
         This site works best with JavaScript enabled.
       </div>
     </noscript>
 
-    <!-- First-load paint reveal overlay -->
     <div class="rlc-paint-overlay" aria-hidden="true">
       <div class="rlc-paint-stroke" aria-hidden="true"></div>
     </div>
@@ -247,16 +315,15 @@ const isHome = pathname === "/" || pathname === "/es/" || pathname === "/es";
     <slot />
 
     <script is:inline>
-      {`
+      {
+        `
         (function () {
           const root = document.documentElement;
 
-          // Mark ready on next frame so the overlay animates out
           requestAnimationFrame(() => {
             root.classList.add("rlc-ready");
           });
 
-          // Lightweight scroll reveal for any element that opts-in
           const prefersReduced =
             window.matchMedia &&
             window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -280,7 +347,8 @@ const isHome = pathname === "/" || pathname === "/es/" || pathname === "/es";
 
           els.forEach((el) => io.observe(el));
         })();
-      `}
+      `;
+      }
     </script>
   </body>
 </html>
