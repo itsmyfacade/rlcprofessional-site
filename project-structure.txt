@@ -1,3 +1,11 @@
+find . \
+  -path "./node_modules" -prune -o \
+  -path "./.vscode" -prune -o \
+  -path "./.venv" -prune -o \
+  -path "./.git" -prune -o \
+  -print > project-structure.txt
+
+
 .
 ./.astro
 ./.astro/collections
@@ -335,7 +343,10 @@
 ./package-lock.json
 ./package.json
 ./project-structure.txt
+./project-structure.txtfind
 ./public
+./public/android-chrome-192x192.png
+./public/android-chrome-512x512.png
 ./public/apple-touch-icon.png
 ./public/assets
 ./public/assets/gallery
@@ -343,12 +354,10 @@
 ./public/assets/hero-tools.PNG
 ./public/assets/hero.jpg
 ./public/assets/rlc-logo.png
-./public/favicon-96x96.png
+./public/favicon-16x16.png
+./public/favicon-32x32.png
 ./public/favicon.ico
-./public/favicon.svg
 ./public/site.webmanifest
-./public/web-app-manifest-192x192.png
-./public/web-app-manifest-512x512.png
 ./README.md
 ./src
 ./src/components
