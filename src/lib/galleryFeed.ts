@@ -43,7 +43,7 @@ function findUrlsInString(s: string): string[] {
 }
 
 /**
- * ✅ NEW: Detect raw Google Drive file IDs (what you see in Network: "17VSeX...")
+ * ✅ Detect raw Google Drive file IDs (what you see in Network: "17VSeX...")
  * Typical Drive IDs are 20–120 chars of A-Z a-z 0-9 _ -
  */
 function looksLikeDriveId(v?: string) {
@@ -60,7 +60,7 @@ function extractUrl(v: any): string | undefined {
     const s = v.trim();
     if (!s) return undefined;
 
-    // ✅ FIX: If it's a raw Drive ID, keep it (we’ll proxy it later)
+    // ✅ If it's a raw Drive ID, keep it (we’ll proxy it later)
     if (looksLikeDriveId(s)) return s;
 
     if (s.startsWith("http")) return s;
@@ -94,7 +94,7 @@ function extractUrl(v: any): string | undefined {
       const s = maybe.trim();
       if (!s) return undefined;
 
-      // ✅ FIX: allow raw Drive IDs embedded here too
+      // ✅ allow raw Drive IDs embedded here too
       if (looksLikeDriveId(s)) return s;
 
       if (s.startsWith("http")) return s;
@@ -114,7 +114,7 @@ function extractUrls(v: any): string[] {
     const s = v.trim();
     if (!s) return [];
 
-    // ✅ FIX: allow raw Drive IDs in multi fields (rare, but safe)
+    // ✅ allow raw Drive IDs in multi fields (rare, but safe)
     if (looksLikeDriveId(s)) return [s];
 
     const urls = findUrlsInString(s);
@@ -157,7 +157,8 @@ function flattenRecord(raw: AnyRecord): AnyRecord {
       if (!entry || typeof entry !== "object") continue;
 
       const label = entry.label || entry.name || entry.key || entry.title;
-      const value = entry.value ?? entry.answer ?? entry.response ?? entry.data ?? entry.file ?? entry.files;
+      const value =
+        entry.value ?? entry.answer ?? entry.response ?? entry.data ?? entry.file ?? entry.files;
 
       if (typeof label === "string" && label.trim().length) {
         out[label] = value;
@@ -235,7 +236,14 @@ function parseCsv(text: string): AnyRecord[] {
 
   if (rows.length < 2) return [];
 
-  const headers = rows[0].map((h) => h.trim().replace(/^"|"$/g, ""));
+  // ✅ IMPORTANT FIX:
+  // If a header cell is blank (common in exported feeds),
+  // give it a stable name like "__col0" so we can reference it.
+  const headers = rows[0].map((h, idx) => {
+    const cleaned = (h ?? "").trim().replace(/^"|"$/g, "");
+    return cleaned.length ? cleaned : `__col${idx}`;
+  });
+
   const out: AnyRecord[] = [];
 
   for (let r = 1; r < rows.length; r++) {
@@ -330,7 +338,10 @@ function driveProxyUrl(publicLinkOrId: string): string | undefined {
  * ✅ Derive embed info for "Public Media Link"
  * - Drive => stream via proxy as a real <video> source
  */
-function deriveEmbed(publicLink?: string): { publicEmbedUrl?: string; publicEmbedKind?: "image" | "video" } {
+function deriveEmbed(publicLink?: string): {
+  publicEmbedUrl?: string;
+  publicEmbedKind?: "image" | "video";
+} {
   if (!publicLink) return {};
   const url = publicLink.trim();
 
@@ -346,18 +357,54 @@ function deriveEmbed(publicLink?: string): { publicEmbedUrl?: string; publicEmbe
   return {};
 }
 
+function normalizeStatus(v: any): string {
+  const s = String(v ?? "")
+    .trim()
+    .toLowerCase();
+  if (!s) return "";
+  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+function isHiddenOrTrash(record: AnyRecord): boolean {
+  // Optional: if you later add a "Status" column, this protects your site immediately.
+  const statusRaw = pick(record, ["Status", "status", "Estado", "estado"]);
+  const st = normalizeStatus(statusRaw);
+
+  if (!st) return false;
+
+  // treat these as not-to-show
+  return (
+    st.includes("hidden") ||
+    st.includes("hide") ||
+    st.includes("trash") ||
+    st.includes("deleted") ||
+    st.includes("remove") ||
+    st.includes("oculto") ||
+    st.includes("oculta") ||
+    st.includes("papelera") ||
+    st.includes("eliminad") // eliminada/eliminado
+  );
+}
+
 /**
  * ✅ Build item from your exact EN/ES field names.
  * NOTE:
  * - If "Video" is Drive link OR raw ID => normalize to proxy
  * - If "Public Media Link" is Drive link OR raw ID => also normalize
  */
-function buildItem(rawRecord: AnyRecord, i: number): GalleryItem {
+function buildItem(rawRecord: AnyRecord, i: number): GalleryItem | null {
   const record = flattenRecord(rawRecord);
 
-  const serviceType = safeString(pick(record, ["Service Type", "Tipo de Servicio", "Tipo de servicio"]));
+  // ✅ Safety: if a row is flagged hidden/trash, never render it
+  if (isHiddenOrTrash(record)) return null;
 
-  const city = safeString(pick(record, ["City", "Ciudad (o ZIP)", "Ciudad (o Zip)", "Ciudad", "ZIP"]));
+  const serviceType = safeString(
+    pick(record, ["Service Type", "Tipo de Servicio", "Tipo de servicio"])
+  );
+
+  const city = safeString(
+    pick(record, ["City", "Ciudad (o ZIP)", "Ciudad (o Zip)", "Ciudad", "ZIP"])
+  );
 
   const caption = safeString(
     pick(record, [
@@ -403,9 +450,16 @@ function buildItem(rawRecord: AnyRecord, i: number): GalleryItem {
   }
 
   const createdAt =
-    safeString(pick(record, ["createdAt", "Created at", "Created At", "timestamp", "Timestamp", "Fecha"])) || undefined;
+    safeString(
+      pick(record, ["createdAt", "Created at", "Created At", "timestamp", "Timestamp", "Fecha"])
+    ) || undefined;
 
-  const id = safeString(pick(record, ["id", "ID", "submissionId", "Submission ID"])) || `${Date.now()}-${i}`;
+  // ✅ IMPORTANT FIX:
+  // If your sheet’s first column is an unlabeled ID, parseCsv() now names it "__col0"
+  // so we can use it as a stable ID.
+  const id =
+    safeString(pick(record, ["id", "ID", "submissionId", "Submission ID", "__col0"])) ||
+    `${Date.now()}-${i}`;
 
   let videoUrl = rawVideoUrl;
   let publicLink = rawPublicLink;
@@ -416,7 +470,9 @@ function buildItem(rawRecord: AnyRecord, i: number): GalleryItem {
     if (prox) {
       // keep an openable share link if publicLink missing
       if (!publicLink) {
-        publicLink = looksLikeDriveId(videoUrl) ? `https://drive.google.com/file/d/${videoUrl}/view` : videoUrl;
+        publicLink = looksLikeDriveId(videoUrl)
+          ? `https://drive.google.com/file/d/${videoUrl}/view`
+          : videoUrl;
       }
       videoUrl = prox;
     }
@@ -452,7 +508,7 @@ export async function fetchGalleryFeed(feedUrl: string, limit = 18): Promise<Gal
   const records = await fetchAsRecords(feedUrl);
   if (!records.length) return [];
 
-  const items = records.map(buildItem);
+  const items = records.map(buildItem).filter(Boolean) as GalleryItem[];
 
   items.sort((a, b) => {
     const ta = a.createdAt ? Date.parse(a.createdAt) : 0;

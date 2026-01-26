@@ -22,10 +22,29 @@ const canonical = Astro.url.href;
   <Nav t={en} site={site} lang="en" />
 
   <main class="mx-auto max-w-3xl px-4 py-12">
-    <h1 class="text-2xl font-extrabold text-brand-900">Owner Upload</h1>
-    <p class="mt-2 text-slate-700">
-      This page is for the business owner to upload new photos/videos to the website gallery.
-    </p>
+    <header class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div>
+        <h1 class="text-2xl font-extrabold text-brand-900">Owner Upload</h1>
+        <p class="mt-2 text-slate-700">
+          This page is for the business owner to upload new photos/videos to the website gallery.
+        </p>
+      </div>
+
+      <div class="flex flex-wrap gap-2">
+        <a class="btn btn-outline" href={site.tallyBeforeAfterUrlEn} target="_blank" rel="noopener">
+          Open form in new tab
+        </a>
+
+        <button
+          type="button"
+          class="btn btn-accent"
+          id="rlc-lock-owner"
+          aria-label="Lock Owner Portal on this device"
+        >
+          Lock Owner Portal
+        </button>
+      </div>
+    </header>
 
     <div class="mt-6 card">
       <p class="text-sm text-slate-700">
@@ -41,8 +60,29 @@ const canonical = Astro.url.href;
           style="height: 78vh;"
           referrerpolicy="no-referrer"></iframe>
       </div>
+
+      <p class="mt-3 text-xs text-slate-500">
+        Security note: This portal is unlocked per device for a limited time. Use “Lock Owner
+        Portal” when finished.
+      </p>
     </div>
   </main>
+
+  <!-- ✅ Prevent indexing/caching of owner portal -->
+  <head>
+    <meta name="robots" content="noindex,nofollow,noarchive" />
+  </head>
+
+  <noscript>
+    <div class="mx-auto max-w-3xl px-4 py-6">
+      <div class="rounded-2xl bg-white p-4 ring-1 ring-slate-200/60 shadow-soft">
+        <p class="text-sm text-slate-700">
+          JavaScript is required to access the Owner Upload portal.
+        </p>
+        <a class="btn btn-accent mt-3 w-fit" href={homeHref}>Go back home</a>
+      </div>
+    </div>
+  </noscript>
 
   <!-- ✅ Hard gate: requires Owner Portal unlock (7-day device access) -->
   <script is:inline>
@@ -66,6 +106,16 @@ const canonical = Astro.url.href;
         if (!ok) {
           // Redirect immediately to home if not unlocked
           window.location.replace(HOME);
+          return;
+        }
+
+        // Lock button: remove unlock for this device
+        const btn = document.getElementById("rlc-lock-owner");
+        if (btn) {
+          btn.addEventListener("click", () => {
+            try { localStorage.removeItem(KEY); } catch (_) {}
+            window.location.replace(HOME);
+          }, { passive: true });
         }
       })();
     `;

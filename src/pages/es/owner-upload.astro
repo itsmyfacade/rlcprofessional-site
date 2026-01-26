@@ -22,10 +22,30 @@ const canonical = Astro.url.href;
   <Nav t={es} site={site} lang="es" />
 
   <main class="mx-auto max-w-3xl px-4 py-12">
-    <h1 class="text-2xl font-extrabold text-brand-900">Subida del Dueño</h1>
-    <p class="mt-2 text-slate-700">
-      Esta página es para que el dueño del negocio suba fotos/videos nuevos a la galería del sitio.
-    </p>
+    <header class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div>
+        <h1 class="text-2xl font-extrabold text-brand-900">Subida del Dueño</h1>
+        <p class="mt-2 text-slate-700">
+          Esta página es para que el dueño del negocio suba fotos/videos nuevos a la galería del
+          sitio.
+        </p>
+      </div>
+
+      <div class="flex flex-wrap gap-2">
+        <a class="btn btn-outline" href={site.tallyBeforeAfterUrlEs} target="_blank" rel="noopener">
+          Abrir formulario en otra pestaña
+        </a>
+
+        <button
+          type="button"
+          class="btn btn-accent"
+          id="rlc-lock-owner"
+          aria-label="Bloquear portal del dueño en este dispositivo"
+        >
+          Bloquear Portal
+        </button>
+      </div>
+    </header>
 
     <div class="mt-6 card">
       <p class="text-sm text-slate-700">
@@ -41,8 +61,29 @@ const canonical = Astro.url.href;
           style="height: 78vh;"
           referrerpolicy="no-referrer"></iframe>
       </div>
+
+      <p class="mt-3 text-xs text-slate-500">
+        Nota de seguridad: este portal se desbloquea por dispositivo por un tiempo limitado. Use
+        “Bloquear Portal” al terminar.
+      </p>
     </div>
   </main>
+
+  <!-- ✅ Prevent indexing/caching of owner portal -->
+  <head>
+    <meta name="robots" content="noindex,nofollow,noarchive" />
+  </head>
+
+  <noscript>
+    <div class="mx-auto max-w-3xl px-4 py-6">
+      <div class="rounded-2xl bg-white p-4 ring-1 ring-slate-200/60 shadow-soft">
+        <p class="text-sm text-slate-700">
+          Se requiere JavaScript para acceder al portal de subida del dueño.
+        </p>
+        <a class="btn btn-accent mt-3 w-fit" href={homeHref}>Volver al inicio</a>
+      </div>
+    </div>
+  </noscript>
 
   <!-- ✅ Hard gate: requires Owner Portal unlock (7-day device access) -->
   <script is:inline>
@@ -66,6 +107,16 @@ const canonical = Astro.url.href;
         if (!ok) {
           // Redirect immediately to /es/ if not unlocked
           window.location.replace(HOME);
+          return;
+        }
+
+        // Lock button: remove unlock for this device
+        const btn = document.getElementById("rlc-lock-owner");
+        if (btn) {
+          btn.addEventListener("click", () => {
+            try { localStorage.removeItem(KEY); } catch (_) {}
+            window.location.replace(HOME);
+          }, { passive: true });
         }
       })();
     `;
