@@ -263,24 +263,49 @@ function parseCsv(text: string): AnyRecord[] {
 async function fetchAsRecords(feedUrl: string): Promise<AnyRecord[]> {
   if (!feedUrl) return [];
 
-  const res = await fetch(feedUrl);
-  if (!res.ok) return [];
-
-  const contentType = res.headers.get("content-type") || "";
-
-  if (contentType.includes("application/json") || feedUrl.includes(".json")) {
-    const data = await res.json();
-
-    if (Array.isArray(data)) return data as AnyRecord[];
-
-    if (data?.submissions && Array.isArray(data.submissions)) return data.submissions;
-    if (data?.data && Array.isArray(data.data)) return data.data;
-    if (data?.rows && Array.isArray(data.rows)) return data.rows;
-
+  let res: Response;
+  try {
+    res = await fetch(feedUrl, {
+      method: "GET",
+      cache: "no-store",
+      headers: {
+        accept: "application/json,text/csv,*/*",
+      },
+    });
+  } catch {
     return [];
   }
 
+  if (!res.ok) return [];
+
+  const contentType = (res.headers.get("content-type") || "").toLowerCase();
   const text = await res.text();
+  const trimmed = text.trim();
+
+  // 🚨 If Apps Script returns HTML (auth, quota, error)
+  if (trimmed.startsWith("<!doctype html") || trimmed.startsWith("<html")) {
+    console.warn("[galleryFeed] HTML response detected, ignoring feed");
+    return [];
+  }
+
+  const looksJson =
+    contentType.includes("application/json") || trimmed.startsWith("{") || trimmed.startsWith("[");
+
+  if (looksJson) {
+    try {
+      const data = JSON.parse(trimmed);
+
+      if (Array.isArray(data)) return data;
+      if (data?.submissions && Array.isArray(data.submissions)) return data.submissions;
+      if (data?.data && Array.isArray(data.data)) return data.data;
+      if (data?.rows && Array.isArray(data.rows)) return data.rows;
+
+      return [];
+    } catch {
+      // fall through to CSV
+    }
+  }
+
   return parseCsv(text);
 }
 

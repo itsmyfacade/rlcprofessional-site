@@ -3,8 +3,15 @@ import { fetchGalleryFeed, type GalleryItem } from "../lib/galleryFeed";
 
 const { t, site, lang } = Astro.props as { t: any; site: any; lang: "en" | "es" };
 
-const feedEn = site.galleryFeed?.en ?? "";
-const feedEs = site.galleryFeed?.es ?? "";
+const SCRIPT_URL = import.meta.env.PUBLIC_GOOGLE_APPS_SCRIPT_URL ?? "";
+
+// Sheet GIDs (locked, client never sees them)
+const GID_EN = "0";
+const GID_ES = "1337806420";
+
+const feedEn = site.galleryFeed?.en || (SCRIPT_URL ? `${SCRIPT_URL}?gid=${GID_EN}` : "");
+
+const feedEs = site.galleryFeed?.es || (SCRIPT_URL ? `${SCRIPT_URL}?gid=${GID_ES}` : "");
 
 const [itemsEn, itemsEs] = await Promise.all([
   fetchGalleryFeed(feedEn, 60),
@@ -77,7 +84,10 @@ type ServiceKey =
 const SERVICE_LABELS: Record<ServiceKey, { en: string; es: string }> = {
   interior_painting: { en: "Interior Painting", es: "Pintura Interior" },
   exterior_painting: { en: "Exterior Painting", es: "Pintura Exterior" },
-  concrete_install_repair: { en: "Concrete Installation & Repair", es: "Instalación y Reparación de Concreto" },
+  concrete_install_repair: {
+    en: "Concrete Installation & Repair",
+    es: "Instalación y Reparación de Concreto",
+  },
   curbs_concrete_edging: { en: "Curbs & Concrete Edging", es: "Bordillos y Bordes de Concreto" },
   pressure_washing: { en: "Pressure Washing", es: "Lavado a Presión" },
   pressure_washing_sealing: { en: "Pressure Washing & Sealing", es: "Lavado a Presión y Sellado" },
@@ -92,10 +102,13 @@ function detectServiceKey(serviceType: string): ServiceKey | null {
   // Exact dropdown matches (EN)
   if (s === "interior painting") return "interior_painting";
   if (s === "exterior painting") return "exterior_painting";
-  if (s === "concrete installation & repair" || s === "concrete installation and repair") return "concrete_install_repair";
-  if (s === "curbs & concrete edging" || s === "curbs and concrete edging") return "curbs_concrete_edging";
+  if (s === "concrete installation & repair" || s === "concrete installation and repair")
+    return "concrete_install_repair";
+  if (s === "curbs & concrete edging" || s === "curbs and concrete edging")
+    return "curbs_concrete_edging";
   if (s === "pressure washing") return "pressure_washing";
-  if (s === "pressure washing & sealing" || s === "pressure washing and sealing") return "pressure_washing_sealing";
+  if (s === "pressure washing & sealing" || s === "pressure washing and sealing")
+    return "pressure_washing_sealing";
   if (s === "roof leak repair") return "roof_leak_repair";
   if (s === "other") return "other";
 
@@ -112,7 +125,8 @@ function detectServiceKey(serviceType: string): ServiceKey | null {
   // Smart fallback
   const hasPressure = s.includes("pressure washing") || s.includes("lavado a presion");
   const hasSeal = s.includes("sealing") || s.includes("sellado");
-  const hasRoof = s.includes("roof") || s.includes("techo") || s.includes("filtracion") || s.includes("goter");
+  const hasRoof =
+    s.includes("roof") || s.includes("techo") || s.includes("filtracion") || s.includes("goter");
 
   if (hasRoof) return "roof_leak_repair";
   if (hasPressure && hasSeal) return "pressure_washing_sealing";
@@ -120,7 +134,8 @@ function detectServiceKey(serviceType: string): ServiceKey | null {
   if (s.includes("interior") || s.includes("pintura interior")) return "interior_painting";
   if (s.includes("exterior") || s.includes("pintura exterior")) return "exterior_painting";
   if (s.includes("concrete") || s.includes("concreto")) return "concrete_install_repair";
-  if (s.includes("curb") || s.includes("bordill") || s.includes("borde")) return "curbs_concrete_edging";
+  if (s.includes("curb") || s.includes("bordill") || s.includes("borde"))
+    return "curbs_concrete_edging";
 
   return null;
 }
@@ -136,11 +151,11 @@ function translateService(serviceType: string | undefined | null, lang: "en" | "
 function hasAnyMedia(it: GalleryItem) {
   return Boolean(
     it.beforeUrl ||
-      it.afterUrl ||
-      it.videoUrl ||
-      (it.morePhotoUrls && it.morePhotoUrls.length > 0) ||
-      it.publicEmbedUrl ||
-      it.publicLink
+    it.afterUrl ||
+    it.videoUrl ||
+    (it.morePhotoUrls && it.morePhotoUrls.length > 0) ||
+    it.publicEmbedUrl ||
+    it.publicLink
   );
 }
 
@@ -204,9 +219,9 @@ function isSinglePhoto(it: GalleryItem) {
 
   return Boolean(
     (it.morePhotoUrls && it.morePhotoUrls.length === 1) ||
-      (it.beforeUrl && !it.afterUrl) ||
-      (it.afterUrl && !it.beforeUrl) ||
-      (it.beforeUrl && it.afterUrl && it.beforeUrl === it.afterUrl)
+    (it.beforeUrl && !it.afterUrl) ||
+    (it.afterUrl && !it.beforeUrl) ||
+    (it.beforeUrl && it.afterUrl && it.beforeUrl === it.afterUrl)
   );
 }
 
@@ -214,9 +229,17 @@ function normalizeVideoSrc(u?: string) {
   if (!u) return "";
   const s = u.trim();
 
-  if (isDriveProxySrc(s)) return s;
+  // Already proxied
+  if (/^\/api\/drive-video\/[a-zA-Z0-9_-]+$/.test(s)) return s;
+
+  // Raw Drive ID
   if (looksLikeDriveId(s)) return `/api/drive-video/${s}`;
-  if (isDrive(s)) return driveProxy(s) || s;
+
+  // Drive URL → proxy
+  if (isDrive(s)) {
+    const id = driveId(s);
+    if (id) return `/api/drive-video/${id}`;
+  }
 
   return s;
 }
@@ -226,8 +249,12 @@ const gallerySchemaItems = items
   .filter(hasAnyMedia)
   .slice(0, 8)
   .map((it) => {
-    const img =
-      (it.afterUrl || it.beforeUrl || (it.morePhotoUrls && it.morePhotoUrls[0]) || "").toString();
+    const img = (
+      it.afterUrl ||
+      it.beforeUrl ||
+      (it.morePhotoUrls && it.morePhotoUrls[0]) ||
+      ""
+    ).toString();
     const name = (translateService(it.serviceType, lang) || ui.untitled).toString();
     const loc = (it.city || "").toString();
 
@@ -242,6 +269,19 @@ const gallerySchemaItems = items
 
 // ✅ Stable id for IO observer / cleanup
 const GALLERY_VIDEO_IO_KEY = "__rlcGalleryVideoIO";
+
+// ✅ PRODUCTION JSON-LD (raw output, avoids Astro escaping issues)
+const galleryJsonLd = gallerySchemaItems.length
+  ? JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      itemListElement: gallerySchemaItems.map((it, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        item: it,
+      })),
+    })
+  : "";
 ---
 
 <section id="gallery" class="border-t border-slate-200/60 bg-brand-50">
@@ -255,184 +295,191 @@ const GALLERY_VIDEO_IO_KEY = "__rlcGalleryVideoIO";
       <a href="#quote" class="btn btn-accent w-fit">{ui.quoteCta}</a>
     </div>
 
-    {items.filter(hasAnyMedia).length === 0 ? (
-      <div class="mt-8 rounded-3xl bg-white p-6 shadow-soft ring-1 ring-slate-200/60">
-        <p class="text-sm text-slate-700">{ui.empty}</p>
-      </div>
-    ) : (
-      <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {items.filter(hasAnyMedia).map((it: GalleryItem) => (
-          <article class="card group overflow-hidden">
-            <div class="flex items-center justify-between gap-2">
-              <p class="text-xs font-extrabold text-brand-900">
-                {translateService(it.serviceType, lang) || ui.untitled}
-              </p>
-              <p class="text-[11px] text-slate-500">{it.city}</p>
-            </div>
+    {
+      items.filter(hasAnyMedia).length === 0 ? (
+        <div class="mt-8 rounded-3xl bg-white p-6 shadow-soft ring-1 ring-slate-200/60">
+          <p class="text-sm text-slate-700">{ui.empty}</p>
+        </div>
+      ) : (
+        <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {items.filter(hasAnyMedia).map((it: GalleryItem) => (
+            <article class="card group overflow-hidden">
+              <div class="flex items-center justify-between gap-2">
+                <p class="text-xs font-extrabold text-brand-900">
+                  {translateService(it.serviceType, lang) || ui.untitled}
+                </p>
+                <p class="text-[11px] text-slate-500">{it.city}</p>
+              </div>
 
-            {/* VIDEO */}
-            {it.videoUrl ? (
-              <div class="mt-3 overflow-hidden rounded-2xl ring-1 ring-slate-200/60 bg-white">
-                <div class="aspect-video w-full bg-white relative overflow-hidden" data-video-box>
-                  <video
-                    class="js-autoplay-video js-hardloop-video js-video-shell js-video-failsafe absolute inset-0 h-full w-full object-contain object-center bg-white"
-                    autoplay
-                    muted
-                    playsinline
-                    loop
-                    preload="metadata"
-                    controlslist="nodownload noplaybackrate"
-                    poster="/assets/rlc-logo.png"
-                    data-is-proxy={isDriveProxySrc(normalizeVideoSrc(it.videoUrl)) ? "1" : "0"}
-                    style="opacity:0"
-                  >
-                    <source src={normalizeVideoSrc(it.videoUrl)} />
-                  </video>
+              {/* VIDEO */}
+              {it.videoUrl ? (
+                <div class="mt-3 overflow-hidden rounded-2xl ring-1 ring-slate-200/60 bg-white">
+                  <div class="aspect-video w-full bg-white relative overflow-hidden" data-video-box>
+                    <video
+                      class="js-autoplay-video js-hardloop-video js-video-shell js-video-failsafe absolute inset-0 h-full w-full object-contain object-center bg-white"
+                      autoplay
+                      muted
+                      playsinline
+                      loop
+                      preload="metadata"
+                      controlslist="nodownload noplaybackrate"
+                      poster="/assets/rlc-logo.png"
+                      data-is-proxy={isDriveProxySrc(normalizeVideoSrc(it.videoUrl)) ? "1" : "0"}
+                      style="opacity:0"
+                    >
+                      <source src={normalizeVideoSrc(it.videoUrl)} />
+                    </video>
 
-                  <div class="js-video-loader js-video-loader-failsafe absolute inset-0 flex items-center justify-center bg-white">
-                    <div class="flex items-center gap-3 rounded-full bg-white px-4 py-2 ring-1 ring-slate-200/70 shadow-soft">
-                      <img
-                        src="/assets/rlc-logo.png"
-                        alt="RLC"
-                        class="js-rlc-pulse h-6 w-6 object-contain"
-                        loading="eager"
-                        decoding="async"
+                    <div class="js-video-loader js-video-loader-failsafe absolute inset-0 flex items-center justify-center bg-white">
+                      <div class="flex items-center gap-3 rounded-full bg-white px-4 py-2 ring-1 ring-slate-200/70 shadow-soft">
+                        <img
+                          src="/assets/rlc-logo.png"
+                          alt="RLC"
+                          class="js-rlc-pulse h-6 w-6 object-contain"
+                          loading="eager"
+                          decoding="async"
+                        />
+                        <span class="text-xs font-semibold text-slate-700">{ui.loading}</span>
+                      </div>
+                    </div>
+
+                    <div class="js-video-fail absolute inset-0 hidden items-center justify-center bg-white">
+                      <div class="rounded-2xl bg-white px-4 py-3 ring-1 ring-slate-200/70 shadow-soft">
+                        <p class="text-xs font-semibold text-slate-700">{ui.videoUnavailable}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : isEmbedVideo(it) ? (
+                <div class="mt-3 overflow-hidden rounded-2xl ring-1 ring-slate-200/60 bg-white">
+                  <div class="aspect-video w-full bg-white relative overflow-hidden" data-video-box>
+                    {it.publicLink &&
+                    (isDrive(it.publicLink) || looksLikeDriveId(it.publicLink)) ? (
+                      <iframe
+                        class="absolute inset-0 h-full w-full"
+                        src={drivePreview(it.publicLink) || ""}
+                        allow="autoplay; fullscreen; encrypted-media"
+                        loading="lazy"
+                        referrerpolicy="no-referrer"
                       />
-                      <span class="text-xs font-semibold text-slate-700">{ui.loading}</span>
-                    </div>
-                  </div>
-
-                  <div class="js-video-fail absolute inset-0 hidden items-center justify-center bg-white">
-                    <div class="rounded-2xl bg-white px-4 py-3 ring-1 ring-slate-200/70 shadow-soft">
-                      <p class="text-xs font-semibold text-slate-700">{ui.videoUnavailable}</p>
-                    </div>
+                    ) : (
+                      <iframe
+                        class="absolute inset-0 h-full w-full"
+                        src={it.publicEmbedUrl || it.publicLink}
+                        allow="autoplay; fullscreen; encrypted-media"
+                        loading="lazy"
+                        referrerpolicy="no-referrer"
+                      />
+                    )}
                   </div>
                 </div>
-              </div>
-            ) : isEmbedVideo(it) ? (
-              <div class="mt-3 overflow-hidden rounded-2xl ring-1 ring-slate-200/60 bg-white">
-                <div class="aspect-video w-full bg-white relative overflow-hidden" data-video-box>
-                  {it.publicLink && (isDrive(it.publicLink) || looksLikeDriveId(it.publicLink)) ? (
-                    <iframe
-                      class="absolute inset-0 h-full w-full"
-                      src={drivePreview(it.publicLink) || ""}
-                      allow="autoplay; fullscreen; encrypted-media"
-                      loading="lazy"
-                      referrerpolicy="no-referrer"
-                    ></iframe>
-                  ) : (
-                    <iframe
-                      class="absolute inset-0 h-full w-full"
-                      src={it.publicEmbedUrl || it.publicLink}
-                      allow="autoplay; fullscreen; encrypted-media"
-                      loading="lazy"
-                      referrerpolicy="no-referrer"
-                    ></iframe>
-                  )}
-                </div>
-              </div>
-            ) : isTwoPhoto(it) ? (
-              <div class="mt-3 grid grid-cols-2 gap-2">
-                <figure class="relative overflow-hidden rounded-2xl ring-1 ring-slate-200/60">
-                  <img
-                    src={it.beforeUrl!}
-                    alt={`Before - ${it.serviceType ?? ""}`}
-                    class="h-44 w-full object-cover transition duration-300 group-hover:scale-[1.03]"
-                    loading="lazy"
-                    decoding="async"
-                    referrerpolicy="no-referrer"
-                  />
-                  <figcaption class="absolute left-2 top-2 rounded-full bg-black/55 px-2 py-1 text-[10px] font-bold text-white">
-                    {ui.before}
-                  </figcaption>
-                </figure>
-
-                <figure class="relative overflow-hidden rounded-2xl ring-1 ring-slate-200/60">
-                  <img
-                    src={it.afterUrl!}
-                    alt={`After - ${it.serviceType ?? ""}`}
-                    class="h-44 w-full object-cover transition duration-300 group-hover:scale-[1.03]"
-                    loading="lazy"
-                    decoding="async"
-                    referrerpolicy="no-referrer"
-                  />
-                  <figcaption class="absolute left-2 top-2 rounded-full bg-accent-500 px-2 py-1 text-[10px] font-bold text-white">
-                    {ui.after}
-                  </figcaption>
-                </figure>
-              </div>
-            ) : hasMulti(it) ? (
-              <div class="mt-3 grid grid-cols-2 gap-2">
-                {it.morePhotoUrls!.slice(0, 4).map((src, idx) => (
+              ) : isTwoPhoto(it) ? (
+                <div class="mt-3 grid grid-cols-2 gap-2">
                   <figure class="relative overflow-hidden rounded-2xl ring-1 ring-slate-200/60">
                     <img
-                      src={src}
-                      alt={`${it.serviceType ?? "Project"} photo ${idx + 1}`}
-                      class="h-28 w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                      src={it.beforeUrl!}
+                      alt={`Before - ${it.serviceType ?? ""}`}
+                      class="h-44 w-full object-cover transition duration-300 group-hover:scale-[1.03]"
                       loading="lazy"
                       decoding="async"
                       referrerpolicy="no-referrer"
                     />
+                    <figcaption class="absolute left-2 top-2 rounded-full bg-black/55 px-2 py-1 text-[10px] font-bold text-white">
+                      {ui.before}
+                    </figcaption>
                   </figure>
-                ))}
-              </div>
-            ) : isSinglePhoto(it) ? (
-              <div class="mt-3 relative overflow-hidden rounded-2xl ring-1 ring-slate-200/60">
-                <img
-                  src={singlePhotoSrc(it)}
-                  alt={`${it.serviceType ?? "Project"} photo`}
-                  class="h-56 w-full object-cover transition duration-300 group-hover:scale-[1.03]"
-                  loading="lazy"
-                  decoding="async"
-                  referrerpolicy="no-referrer"
-                />
-                <div class="absolute left-2 top-2 rounded-full bg-black/55 px-2 py-1 text-[10px] font-bold text-white">
-                  {ui.viewMedia}
+
+                  <figure class="relative overflow-hidden rounded-2xl ring-1 ring-slate-200/60">
+                    <img
+                      src={it.afterUrl!}
+                      alt={`After - ${it.serviceType ?? ""}`}
+                      class="h-44 w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                      loading="lazy"
+                      decoding="async"
+                      referrerpolicy="no-referrer"
+                    />
+                    <figcaption class="absolute left-2 top-2 rounded-full bg-accent-500 px-2 py-1 text-[10px] font-bold text-white">
+                      {ui.after}
+                    </figcaption>
+                  </figure>
                 </div>
-              </div>
-            ) : (
-              <div class="mt-3 flex h-56 items-center justify-center rounded-2xl bg-white ring-1 ring-slate-200/60">
-                <a class="btn btn-outline" href={it.publicLink} target="_blank" rel="noopener">
-                  {ui.openLink}
-                </a>
-              </div>
-            )}
+              ) : hasMulti(it) ? (
+                <div class="mt-3 grid grid-cols-2 gap-2">
+                  {it.morePhotoUrls!.slice(0, 4).map((src, idx) => (
+                    <figure class="relative overflow-hidden rounded-2xl ring-1 ring-slate-200/60">
+                      <img
+                        src={src}
+                        alt={`${it.serviceType ?? "Project"} photo ${idx + 1}`}
+                        class="h-28 w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                        loading="lazy"
+                        decoding="async"
+                        referrerpolicy="no-referrer"
+                      />
+                    </figure>
+                  ))}
+                </div>
+              ) : isSinglePhoto(it) ? (
+                <div class="mt-3 relative overflow-hidden rounded-2xl ring-1 ring-slate-200/60">
+                  <img
+                    src={singlePhotoSrc(it)}
+                    alt={`${it.serviceType ?? "Project"} photo`}
+                    class="h-56 w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                    loading="lazy"
+                    decoding="async"
+                    referrerpolicy="no-referrer"
+                  />
+                  <div class="absolute left-2 top-2 rounded-full bg-black/55 px-2 py-1 text-[10px] font-bold text-white">
+                    {ui.viewMedia}
+                  </div>
+                </div>
+              ) : (
+                <div class="mt-3 flex h-56 items-center justify-center rounded-2xl bg-white ring-1 ring-slate-200/60">
+                  <a class="btn btn-outline" href={it.publicLink} target="_blank" rel="noopener">
+                    {ui.openLink}
+                  </a>
+                </div>
+              )}
 
-            {it.caption ? <p class="mt-3 text-sm leading-relaxed text-slate-700">{it.caption}</p> : null}
+              {it.caption ? (
+                <p class="mt-3 text-sm leading-relaxed text-slate-700">{it.caption}</p>
+              ) : null}
 
-            {it.publicLink ? (
-              <div class="mt-3">
-                <a class="text-sm font-semibold text-accent-700 underline" href={it.publicLink} target="_blank" rel="noopener">
-                  {ui.openLink}
-                </a>
-              </div>
-            ) : null}
-          </article>
-        ))}
-      </div>
-    )}
+              {it.publicLink ? (
+                <div class="mt-3">
+                  <a
+                    class="text-sm font-semibold text-accent-700 underline"
+                    href={it.publicLink}
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    {ui.openLink}
+                  </a>
+                </div>
+              ) : null}
+            </article>
+          ))}
+        </div>
+      )
+    }
   </div>
 
-  {/* ✅ Gallery structured data */}
-  {gallerySchemaItems.length ? (
-    <script type="application/ld+json">
-      {JSON.stringify({
-        "@context": "https://schema.org",
-        "@type": "ItemList",
-        itemListElement: gallerySchemaItems.map((it, i) => ({
-          "@type": "ListItem",
-          position: i + 1,
-          item: it,
-        })),
-      })}
-    </script>
-  ) : null}
+  {/* ✅ Gallery structured data (raw output; fixes "Unparsable structured data") */}
+  {galleryJsonLd ? <script type="application/ld+json" set:html={galleryJsonLd} /> : null}
 
   <style>
     @keyframes rlcPulse {
-      0% { transform: scale(1); opacity: 0.9; }
-      50% { transform: scale(1.08); opacity: 1; }
-      100% { transform: scale(1); opacity: 0.9; }
+      0% {
+        transform: scale(1);
+        opacity: 0.9;
+      }
+      50% {
+        transform: scale(1.08);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 0.9;
+      }
     }
     .js-rlc-pulse {
       animation: rlcPulse 1.2s ease-in-out infinite;
@@ -440,10 +487,16 @@ const GALLERY_VIDEO_IO_KEY = "__rlcGalleryVideoIO";
     }
 
     @keyframes loaderFadeOut {
-      to { opacity: 0; visibility: hidden; pointer-events: none; }
+      to {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
     }
     @keyframes videoFadeIn {
-      to { opacity: 1; }
+      to {
+        opacity: 1;
+      }
     }
 
     /* Keeps your existing failsafe */
@@ -459,7 +512,8 @@ const GALLERY_VIDEO_IO_KEY = "__rlcGalleryVideoIO";
   </style>
 
   <script is:inline>
-    {`
+    {
+      `
       const KEY = ${JSON.stringify(GALLERY_VIDEO_IO_KEY)};
 
       const forceMute = (el) => {
@@ -628,6 +682,7 @@ const GALLERY_VIDEO_IO_KEY = "__rlcGalleryVideoIO";
 
       // ✅ Astro view transitions / SPA navigation support
       document.addEventListener("astro:page-load", () => boot(document), { passive: true });
-    `}
+    `;
+    }
   </script>
 </section>

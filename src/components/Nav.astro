@@ -31,8 +31,7 @@ const supportHref = siteEmail ? `mailto:${siteEmail}` : `tel:${phoneTel}`;
 const ownerPortalLabel =
   t?.nav?.ownerPortal ?? (lang === "es" ? "Portal del Dueño" : "Owner Portal");
 
-const ownerLogoutLabel =
-  t?.nav?.ownerLogout ?? (lang === "es" ? "Cerrar sesión" : "Log out");
+const ownerLogoutLabel = t?.nav?.ownerLogout ?? (lang === "es" ? "Cerrar sesión" : "Log out");
 
 const ownerUnlockTitle =
   t?.nav?.ownerUnlockTitle ?? (lang === "es" ? "Acceso del Dueño" : "Owner Access");
@@ -46,20 +45,17 @@ const ownerUnlockHint =
 const ownerPasswordLabel =
   t?.nav?.ownerPasswordLabel ?? (lang === "es" ? "Contraseña" : "Password");
 
-const ownerUnlockBtn =
-  t?.nav?.ownerUnlockBtn ?? (lang === "es" ? "Entrar" : "Continue");
+const ownerUnlockBtn = t?.nav?.ownerUnlockBtn ?? (lang === "es" ? "Entrar" : "Continue");
 
 const ownerForgotLabel =
   t?.nav?.ownerForgot ?? (lang === "es" ? "¿Olvidó la contraseña?" : "Forgot password?");
 
-const ownerContactLabel =
-  t?.nav?.ownerContact ?? (lang === "es" ? "Contactar" : "Contact");
+const ownerContactLabel = t?.nav?.ownerContact ?? (lang === "es" ? "Contactar" : "Contact");
 
 const ownerErrorLabel =
   t?.nav?.ownerError ?? (lang === "es" ? "Contraseña incorrecta." : "Incorrect password.");
 
-const ownerCloseLabel =
-  t?.nav?.close ?? (lang === "es" ? "Cerrar" : "Close");
+const ownerCloseLabel = t?.nav?.close ?? (lang === "es" ? "Cerrar" : "Close");
 
 // ✅ Secondary call label (no new i18n required)
 const callAltLabel = t?.nav?.callAlt ?? (lang === "es" ? "Llamar 2" : "Call 2");
@@ -84,7 +80,9 @@ const OWNER_UNLOCK_DAYS = 7; // remember for 7 days
       />
 
       <div class="min-w-0">
-        <p class="brand-clamp text-[13px] font-semibold leading-tight text-brand-900 sm:text-sm sm:leading-normal">
+        <p
+          class="brand-clamp text-[13px] font-semibold leading-tight text-brand-900 sm:text-sm sm:leading-normal"
+        >
           {site.brandName}
         </p>
         <p class="hidden sm:block text-xs text-slate-600">Haines City • Kissimmee • Davenport</p>
@@ -107,7 +105,12 @@ const OWNER_UNLOCK_DAYS = 7; // remember for 7 days
         {ownerPortalLabel}
       </button>
 
-      <a class="btn btn-outline px-4" href={langHref} aria-label="Toggle language" title={t.nav.toggle}>
+      <a
+        class="btn btn-outline px-4"
+        href={langHref}
+        aria-label="Toggle language"
+        title={t.nav.toggle}
+      >
         {t.nav.toggle}
       </a>
 
@@ -116,17 +119,24 @@ const OWNER_UNLOCK_DAYS = 7; // remember for 7 days
         {t.nav.callNow}: {phoneDisplay}
       </a>
 
-      <!-- ✅ Secondary call (renders if phoneTel2 exists; display falls back safely) -->
-      {phoneTel2 ? (
-        <a class="btn btn-outline px-4" href={`tel:${phoneTel2}`} aria-label={callAltLabel}>
-          {callAltLabel}: {phoneDisplay2}
-        </a>
-      ) : null}
+      <!-- ✅ Secondary call -->
+      {
+        phoneTel2 ? (
+          <a class="btn btn-outline px-4" href={`tel:${phoneTel2}`} aria-label={callAltLabel}>
+            {callAltLabel}: {phoneDisplay2}
+          </a>
+        ) : null
+      }
     </nav>
 
     <!-- Mobile -->
     <div class="flex items-center gap-2 md:hidden shrink-0 pointer-events-auto">
-      <a class="btn btn-outline px-3" href={langHref} aria-label="Toggle language" title={t.nav.toggle}>
+      <a
+        class="btn btn-outline px-3"
+        href={langHref}
+        aria-label="Toggle language"
+        title={t.nav.toggle}
+      >
         {t.nav.toggle}
       </a>
 
@@ -142,20 +152,40 @@ const OWNER_UNLOCK_DAYS = 7; // remember for 7 days
         aria-expanded="false"
         aria-controls="mobileMenu"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5" aria-hidden="true">
-          <path fill-rule="evenodd" d="M3.75 6.75A.75.75 0 0 1 4.5 6h15a.75.75 0 0 1 0 1.5h-15a.75.75 0 0 1-.75-.75ZM3.75 12a.75.75 0 0 1 .75-.75h15a.75.75 0 0 1 0 1.5h-15A.75.75 0 0 1 3.75 12Zm.75 5.25a.75.75 0 0 0 0 1.5h15a.75.75 0 0 0 0-1.5h-15Z" clip-rule="evenodd" />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          class="h-5 w-5"
+          aria-hidden="true"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M3.75 6.75A.75.75 0 0 1 4.5 6h15a.75.75 0 0 1 0 1.5h-15a.75.75 0 0 1-.75-.75ZM3.75 12a.75.75 0 0 1 .75-.75h15a.75.75 0 0 1 0 1.5h-15A.75.75 0 0 1 3.75 12Zm.75 5.25a.75.75 0 0 0 0 1.5h15a.75.75 0 0 0 0-1.5h-15Z"
+            clip-rule="evenodd"></path>
         </svg>
       </button>
     </div>
   </div>
 
   <!-- Mobile dropdown menu -->
-  <div id="mobileMenu" class="hidden border-t border-slate-200/60 bg-white/95 backdrop-blur pointer-events-auto">
+  <div
+    id="mobileMenu"
+    class="hidden border-t border-slate-200/60 bg-white/95 backdrop-blur pointer-events-auto"
+  >
     <div class="mx-auto max-w-6xl px-4 py-4">
       <div class="grid gap-2">
-        <a class="navlink block rounded-xl px-3 py-2 hover:bg-brand-50" data-navlink href="#services">{t.nav.services}</a>
-        <a class="navlink block rounded-xl px-3 py-2 hover:bg-brand-50" data-navlink href="#quote">{t.nav.quote}</a>
-        <a class="navlink block rounded-xl px-3 py-2 hover:bg-brand-50" data-navlink href="#contact">{t.nav.contact}</a>
+        <a
+          class="navlink block rounded-xl px-3 py-2 hover:bg-brand-50"
+          data-navlink
+          href="#services">{t.nav.services}</a
+        >
+        <a class="navlink block rounded-xl px-3 py-2 hover:bg-brand-50" data-navlink href="#quote"
+          >{t.nav.quote}</a
+        >
+        <a class="navlink block rounded-xl px-3 py-2 hover:bg-brand-50" data-navlink href="#contact"
+          >{t.nav.contact}</a
+        >
 
         <button
           type="button"
@@ -169,17 +199,17 @@ const OWNER_UNLOCK_DAYS = 7; // remember for 7 days
       </div>
 
       <div class="mt-4 flex flex-col gap-2">
-        <!-- ✅ Primary -->
         <a class="btn btn-primary w-full" href={`tel:${phoneTel}`} aria-label={t.nav.callNow}>
           {t.nav.callNow}: {phoneDisplay}
         </a>
 
-        <!-- ✅ Secondary -->
-        {phoneTel2 ? (
-          <a class="btn btn-outline w-full" href={`tel:${phoneTel2}`} aria-label={callAltLabel}>
-            {callAltLabel}: {phoneDisplay2}
-          </a>
-        ) : null}
+        {
+          phoneTel2 ? (
+            <a class="btn btn-outline w-full" href={`tel:${phoneTel2}`} aria-label={callAltLabel}>
+              {callAltLabel}: {phoneDisplay2}
+            </a>
+          ) : null
+        }
 
         <a class="btn btn-outline w-full" href={langHref} aria-label="Toggle language">
           {t.nav.toggle}
@@ -198,14 +228,13 @@ const OWNER_UNLOCK_DAYS = 7; // remember for 7 days
         aria-modal="true"
         aria-labelledby="ownerGateTitle"
         class="w-full max-w-md rounded-3xl bg-white p-5 shadow-soft ring-1 ring-slate-200/70"
-        style="
-          margin-top: env(safe-area-inset-top);
-          margin-bottom: env(safe-area-inset-bottom);
-        "
+        style="margin-top: env(safe-area-inset-top); margin-bottom: env(safe-area-inset-bottom);"
       >
         <div class="flex items-start justify-between gap-3">
           <div>
-            <p id="ownerGateTitle" class="text-base font-extrabold text-brand-900">{ownerUnlockTitle}</p>
+            <p id="ownerGateTitle" class="text-base font-extrabold text-brand-900">
+              {ownerUnlockTitle}
+            </p>
             <p class="mt-1 text-sm text-slate-600">{ownerUnlockHint}</p>
           </div>
 
@@ -215,44 +244,77 @@ const OWNER_UNLOCK_DAYS = 7; // remember for 7 days
             class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500 focus-visible:ring-offset-2"
             aria-label={ownerCloseLabel}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5" aria-hidden="true">
-              <path fill-rule="evenodd" d="M6.22 6.22a.75.75 0 0 1 1.06 0L12 10.94l4.72-4.72a.75.75 0 1 1 1.06 1.06L13.06 12l4.72 4.72a.75.75 0 0 1-1.06 1.06L12 13.06l-4.72 4.72a.75.75 0 0 1-1.06-1.06L10.94 12 6.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              class="h-5 w-5"
+              aria-hidden="true"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M6.22 6.22a.75.75 0 0 1 1.06 0L12 10.94l4.72-4.72a.75.75 0 1 1 1.06 1.06L13.06 12l4.72 4.72a.75.75 0 0 1-1.06 1.06L12 13.06l-4.72 4.72a.75.75 0 0 1-1.06-1.06L10.94 12 6.22 7.28a.75.75 0 0 1 0-1.06Z"
+                clip-rule="evenodd"></path>
             </svg>
           </button>
         </div>
 
-        <div class="mt-4">
-          <label for="ownerPass" class="text-xs font-bold text-slate-700">{ownerPasswordLabel}</label>
+        <!-- ✅ FORM wrapper -->
+        <form id="ownerGateForm" class="mt-4" autocomplete="on">
+          <!-- ✅ Accessibility: optional hidden username field prevents Chrome warning -->
+          <input
+            type="text"
+            name="username"
+            autocomplete="username"
+            tabindex="-1"
+            class="hidden"
+            aria-hidden="true"
+          />
+
+          <label for="ownerPass" class="text-xs font-bold text-slate-700">
+            {ownerPasswordLabel}
+          </label>
           <input
             id="ownerPass"
+            name="ownerPass"
             type="password"
             autocomplete="current-password"
             class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-soft ring-1 ring-black/5 outline-none focus:border-accent-500 focus:ring-2 focus:ring-accent-500/30"
           />
-          <p id="ownerErr" class="mt-2 hidden text-sm font-semibold text-red-600">{ownerErrorLabel}</p>
-        </div>
+          <p id="ownerErr" class="mt-2 hidden text-sm font-semibold text-red-600">
+            {ownerErrorLabel}
+          </p>
 
-        <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div class="flex items-center gap-2">
-            <button id="ownerContinue" type="button" class="btn btn-accent w-full sm:w-auto">
-              {ownerUnlockBtn}
-            </button>
+          <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex items-center gap-2">
+              <button id="ownerContinue" type="submit" class="btn btn-accent w-full sm:w-auto">
+                {ownerUnlockBtn}
+              </button>
 
-            <button id="ownerLogout" type="button" class="btn btn-outline w-full sm:w-auto">
-              {ownerLogoutLabel}
-            </button>
+              <button id="ownerLogout" type="button" class="btn btn-outline w-full sm:w-auto">
+                {ownerLogoutLabel}
+              </button>
+            </div>
+
+            <a
+              class="text-sm font-semibold text-accent-700 underline"
+              href={supportHref}
+              id="ownerForgot"
+              rel="noopener"
+            >
+              {ownerForgotLabel}
+              <span class="no-underline">({ownerContactLabel})</span>
+            </a>
           </div>
-
-          <a class="text-sm font-semibold text-accent-700 underline" href={supportHref} id="ownerForgot" rel="noopener">
-            {ownerForgotLabel} <span class="no-underline">({ownerContactLabel})</span>
-          </a>
-        </div>
+        </form>
 
         <div class="mt-4 rounded-2xl bg-brand-50 p-3 ring-1 ring-slate-200/60">
           <p class="text-xs text-slate-600">
-            {lang === "es"
-              ? "Consejo: una vez que entres, el acceso queda guardado por 7 días en este dispositivo."
-              : "Tip: once you enter, access is saved for 7 days on this device."}
+            {
+              lang === "es"
+                ? "Consejo: una vez que entres, el acceso queda guardado por 7 días en este dispositivo."
+                : "Tip: once you enter, access is saved for 7 days on this device."
+            }
           </p>
         </div>
       </div>
@@ -268,7 +330,9 @@ const OWNER_UNLOCK_DAYS = 7; // remember for 7 days
       max-width: 10.5rem;
     }
     @media (min-width: 640px) {
-      .brand-clamp { max-width: none; }
+      .brand-clamp {
+        max-width: none;
+      }
     }
 
     a[data-navlink][aria-current="page"] {
@@ -288,13 +352,15 @@ const OWNER_UNLOCK_DAYS = 7; // remember for 7 days
 
     #siteHeader.is-scrolled {
       box-shadow: 0 10px 30px rgba(2, 6, 23, 0.06);
-      background: rgba(255,255,255,0.88);
+      background: rgba(255, 255, 255, 0.88);
     }
 
     .rlc-reveal {
       opacity: 0;
       transform: translateY(14px);
-      transition: opacity 520ms ease, transform 520ms ease;
+      transition:
+        opacity 520ms ease,
+        transform 520ms ease;
       will-change: opacity, transform;
     }
     .rlc-reveal.is-in {
@@ -310,6 +376,7 @@ const OWNER_UNLOCK_DAYS = 7; // remember for 7 days
     }
   </style>
 
+  <!-- ✅ CRITICAL FIX: put the variables on window so ANY page can read them -->
   <script
     is:inline
     define:vars={{
@@ -317,12 +384,28 @@ const OWNER_UNLOCK_DAYS = 7; // remember for 7 days
       OWNER_UNLOCK_DAYS,
       OWNER_HREF: ownerHref,
       OWNER_PASSWORD: ownerPassword,
-      LANG: lang
+      LANG: lang,
     }}
   >
+    // Make constants globally available (fixes OWNER_UNLOCK_UNTIL_KEY is not defined)
+    window.OWNER_UNLOCK_UNTIL_KEY = OWNER_UNLOCK_UNTIL_KEY;
+    window.OWNER_UNLOCK_DAYS = OWNER_UNLOCK_DAYS;
+    window.OWNER_HREF = OWNER_HREF;
+    window.OWNER_PASSWORD = OWNER_PASSWORD;
+    window.OWNER_LANG = LANG;
+  </script>
+
+  <!-- ✅ Main nav script reads from window so it can NEVER be undefined -->
+  <script is:inline>
     function rlcBindNav() {
       if (window.__rlcNavBound) return;
       window.__rlcNavBound = true;
+
+      const OWNER_UNLOCK_UNTIL_KEY = window.OWNER_UNLOCK_UNTIL_KEY || "rlc_owner_unlocked_until";
+      const OWNER_UNLOCK_DAYS = Number(window.OWNER_UNLOCK_DAYS) || 7;
+      const OWNER_HREF = window.OWNER_HREF || "/owner-upload";
+      const OWNER_PASSWORD = window.OWNER_PASSWORD || "";
+      const LANG = window.OWNER_LANG || "en";
 
       const header = document.getElementById("siteHeader");
 
@@ -332,9 +415,9 @@ const OWNER_UNLOCK_DAYS = 7; // remember for 7 days
       const ownerGate = document.getElementById("ownerGate");
       const ownerGateBackdrop = document.getElementById("ownerGateBackdrop");
       const ownerGateClose = document.getElementById("ownerGateClose");
+      const ownerGateForm = document.getElementById("ownerGateForm");
       const ownerPass = document.getElementById("ownerPass");
       const ownerErr = document.getElementById("ownerErr");
-      const ownerContinue = document.getElementById("ownerContinue");
       const ownerLogout = document.getElementById("ownerLogout");
       const ownerPortalBtnDesktop = document.getElementById("ownerPortalBtnDesktop");
       const ownerPortalBtnMobile = document.getElementById("ownerPortalBtnMobile");
@@ -360,7 +443,9 @@ const OWNER_UNLOCK_DAYS = 7; // remember for 7 days
 
       menuBtn?.addEventListener("click", toggleMobileMenu, { capture: true });
 
-      function nowMs() { return Date.now(); }
+      function nowMs() {
+        return Date.now();
+      }
 
       function isOwnerUnlocked() {
         try {
@@ -380,7 +465,9 @@ const OWNER_UNLOCK_DAYS = 7; // remember for 7 days
       }
 
       function clearOwnerUnlocked() {
-        try { localStorage.removeItem(OWNER_UNLOCK_UNTIL_KEY); } catch (_) {}
+        try {
+          localStorage.removeItem(OWNER_UNLOCK_UNTIL_KEY);
+        } catch (_) {}
       }
 
       function openOwnerGate() {
@@ -416,7 +503,9 @@ const OWNER_UNLOCK_DAYS = 7; // remember for 7 days
 
         if (!OWNER_PASSWORD) {
           ownerErr.textContent =
-            LANG === "es" ? "Acceso no disponible. Falta configuración." : "Access unavailable. Missing configuration.";
+            LANG === "es"
+              ? "Acceso no disponible. Falta configuración."
+              : "Access unavailable. Missing configuration.";
           ownerErr.classList.remove("hidden");
           return;
         }
@@ -442,36 +531,55 @@ const OWNER_UNLOCK_DAYS = 7; // remember for 7 days
         closeOwnerGate();
       }
 
-      ownerPortalBtnDesktop?.addEventListener("click", (e) => {
-        e.preventDefault();
-        openOwnerGate();
-      }, { capture: true });
+      ownerPortalBtnDesktop?.addEventListener(
+        "click",
+        (e) => {
+          e.preventDefault();
+          openOwnerGate();
+        },
+        { capture: true }
+      );
 
-      ownerPortalBtnMobile?.addEventListener("click", (e) => {
-        e.preventDefault();
-        closeMobileMenu();
-        openOwnerGate();
-      }, { capture: true });
+      ownerPortalBtnMobile?.addEventListener(
+        "click",
+        (e) => {
+          e.preventDefault();
+          closeMobileMenu();
+          openOwnerGate();
+        },
+        { capture: true }
+      );
 
-      ownerGateClose?.addEventListener("click", (e) => {
-        e.preventDefault();
-        closeOwnerGate();
-      }, { capture: true });
+      ownerGateClose?.addEventListener(
+        "click",
+        (e) => {
+          e.preventDefault();
+          closeOwnerGate();
+        },
+        { capture: true }
+      );
 
       ownerGateBackdrop?.addEventListener("click", closeOwnerGate, { capture: true });
 
-      ownerContinue?.addEventListener("click", (e) => {
-        e.preventDefault();
-        submitOwnerPass();
-      }, { capture: true });
+      ownerGateForm?.addEventListener(
+        "submit",
+        (e) => {
+          e.preventDefault();
+          submitOwnerPass();
+        },
+        { capture: true }
+      );
 
-      ownerLogout?.addEventListener("click", (e) => {
-        e.preventDefault();
-        doOwnerLogout();
-      }, { capture: true });
+      ownerLogout?.addEventListener(
+        "click",
+        (e) => {
+          e.preventDefault();
+          doOwnerLogout();
+        },
+        { capture: true }
+      );
 
       ownerPass?.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") submitOwnerPass();
         if (e.key === "Escape") closeOwnerGate();
       });
 
@@ -502,13 +610,17 @@ const OWNER_UNLOCK_DAYS = 7; // remember for 7 days
       }
 
       navLinks.forEach((a) => {
-        a.addEventListener("click", (e) => {
-          const href = a.getAttribute("href") || "";
-          if (!href.startsWith("#")) return;
-          e.preventDefault();
-          closeMobileMenu();
-          smoothScrollToHash(href);
-        }, { capture: true });
+        a.addEventListener(
+          "click",
+          (e) => {
+            const href = a.getAttribute("href") || "";
+            if (!href.startsWith("#")) return;
+            e.preventDefault();
+            closeMobileMenu();
+            smoothScrollToHash(href);
+          },
+          { capture: true }
+        );
       });
 
       try {
@@ -517,7 +629,9 @@ const OWNER_UNLOCK_DAYS = 7; // remember for 7 days
         }
       } catch (_) {}
 
-      const sectionIds = ["services", "quote", "contact"].filter((id) => document.getElementById(id));
+      const sectionIds = ["services", "quote", "contact"].filter((id) =>
+        document.getElementById(id)
+      );
 
       const setActive = (id) => {
         navLinks.forEach((a) => {
@@ -531,17 +645,20 @@ const OWNER_UNLOCK_DAYS = 7; // remember for 7 days
       if ("IntersectionObserver" in window && sectionIds.length) {
         const headerH = header?.getBoundingClientRect?.().height || 0;
 
-        const io = new IntersectionObserver((entries) => {
-          const visible = entries
-            .filter((e) => e.isIntersecting)
-            .sort((a, b) => (b.intersectionRatio || 0) - (a.intersectionRatio || 0))[0];
+        const io = new IntersectionObserver(
+          (entries) => {
+            const visible = entries
+              .filter((e) => e.isIntersecting)
+              .sort((a, b) => (b.intersectionRatio || 0) - (a.intersectionRatio || 0))[0];
 
-          if (visible?.target?.id) setActive(visible.target.id);
-        }, {
-          root: null,
-          threshold: [0.25, 0.4, 0.6],
-          rootMargin: `-${Math.round(headerH + 20)}px 0px -55% 0px`
-        });
+            if (visible?.target?.id) setActive(visible.target.id);
+          },
+          {
+            root: null,
+            threshold: [0.25, 0.4, 0.6],
+            rootMargin: `-${Math.round(headerH + 20)}px 0px -55% 0px`,
+          }
+        );
 
         sectionIds.forEach((id) => {
           const el = document.getElementById(id);
@@ -576,8 +693,7 @@ const OWNER_UNLOCK_DAYS = 7; // remember for 7 days
       const bootHash = (location.hash || "").trim();
       if (bootHash && bootHash.startsWith("#")) {
         setTimeout(() => {
-          const ok = smoothScrollToHash(bootHash);
-          if (!ok) return;
+          smoothScrollToHash(bootHash);
         }, 50);
       }
     }
@@ -592,14 +708,7 @@ const OWNER_UNLOCK_DAYS = 7; // remember for 7 days
       if (prefersReduced) return;
 
       const pickTargets = () => {
-        const selectors = [
-          "#services",
-          "#quote",
-          "#gallery",
-          "footer",
-          "section"
-        ];
-
+        const selectors = ["#services", "#quote", "#gallery", "footer", "section"];
         const seen = new Set();
         const out = [];
 
@@ -651,10 +760,14 @@ const OWNER_UNLOCK_DAYS = 7; // remember for 7 days
     }
 
     if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", () => {
-        rlcBindNav();
-        rlcBindScrollReveal();
-      }, { once: true });
+      document.addEventListener(
+        "DOMContentLoaded",
+        () => {
+          rlcBindNav();
+          rlcBindScrollReveal();
+        },
+        { once: true }
+      );
     } else {
       rlcBindNav();
       rlcBindScrollReveal();
