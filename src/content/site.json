@@ -1,6 +1,6 @@
 {
   "brandName": "RLC Professional",
-  "url": "https://rlcprofessional.com/",
+  "url": "https://rlcprofessional.com",
   "phoneTel": "+18632585424",
   "phoneDisplay": "(863) 258-5424",
   "phoneTel2": "+18633902698",
@@ -13,14 +13,23 @@
     "ogImage": "/assets/og.jpg"
   },
   "meta": {
-    "canonical": "https://rlcprofessional.com/",
+    "canonical": "https://rlcprofessional.com",
     "title": "Painters in Haines City | RLC Professional",
     "description": "Interior & exterior painting and pressure washing in Kissimmee, Haines City, and Poinciana. Fast quotes, clean prep, professional results."
   },
+
   "tallyFormUrlEn": "https://tally.so/r/4478Xb",
   "tallyFormUrlEs": "https://tally.so/r/4478jA",
   "tallyBeforeAfterUrlEn": "https://tally.so/r/Pd9Ygb",
   "tallyBeforeAfterUrlEs": "https://tally.so/r/447vpX",
+
+  "tallyEmbed": {
+    "formEn": "https://tally.so/r/4478Xb",
+    "formEs": "https://tally.so/r/4478jA",
+    "beforeAfterEn": "https://tally.so/r/Pd9Ygb",
+    "beforeAfterEs": "https://tally.so/r/447vpX"
+  },
+
   "galleryFeed": {
     "en": "https://script.google.com/macros/s/AKfycbxsUcI49iXKivH6KARNBm4Z3vRbFJ1CYQ8foxDrvBm4d8qyDXsZaTtp19Lfm92nn1fTpg/exec?gid=0",
     "es": "https://script.google.com/macros/s/AKfycbxsUcI49iXKivH6KARNBm4Z3vRbFJ1CYQ8foxDrvBm4d8qyDXsZaTtp19Lfm92nn1fTpg/exec?gid=1337806420"
